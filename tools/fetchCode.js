@@ -8,7 +8,7 @@ let env = yaml.safeLoad(fileContents);
 var email = env.screeps.email,
     password = env.screeps.password,
     data = {
-        branch: "Rev8",
+        branch: env.screeps.branch,
         ptr: env.screeps.ptr,
     };
 
