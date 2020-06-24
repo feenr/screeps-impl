@@ -12,7 +12,6 @@
     "grunt-screeps": "^1.4.0"
   },
   "devDependencies": {
-    "grunt": "^1.1.0",
-    "grunt-env": "^1.0.1"
+    "grunt": "^1.1.0"
   }
 }
