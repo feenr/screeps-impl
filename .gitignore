@@ -2,3 +2,4 @@ Gruntfile.js
 node_modules
 env.yaml
 .idea
+dist

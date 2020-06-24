@@ -1,5 +1,5 @@
 require('proto_extensions');
-require('proto_creep');
+require('prototype_creep');
 require('proto_structure');
 require('proto_room');
 
