@@ -1,13 +1,6 @@
-/*
- * Module code goes here. Use 'module.exports' to export things:
- * module.exports = 'a thing';
- *
- * You can import it from another modules like this:
- * var mod = require('utils'); // -> 'a thing'
- */
- module.exports = (function(){
+module.exports = (function(){
     var publicAPI = {};
-    var settings = require('settings');
+    var settings = require('./utils_settings_registry');
 
 
    publicAPI.RoomName = function(name){
@@ -166,7 +159,8 @@
         attack : 80,
         ranged_attack : 150,
         heal : 250,
-        tough : 10
+        tough : 10,
+        claim: 600
     }
     
     publicAPI.sortByPriority = function(list){
@@ -252,8 +246,32 @@
         return false;
     }
     
-    
-    
+
+    publicAPI.generateId = function(prefix){
+      function s4() {
+        return Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
+      }
+      return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4();
+    };
+
+    publicAPI.calculateComponents = function(targetMineral){
+      for(var mineral1 in REACTIONS){
+        for(var mineral2 in REACTIONS[mineral1]){
+          if(REACTIONS[mineral1][mineral2] == targetMineral){
+            return [mineral1, mineral2];
+          }
+        }
+      }
+    };
+
+  publicAPI.loadObjectsFromIDs = function(idList){
+    var objectList = [];
+    for(var i in idList){
+      objectList.push(Game.getObjectById(idList[i]));
+    }
+    return objectList;
+  }
+
     return publicAPI;
     
  })();

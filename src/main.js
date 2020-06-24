@@ -1,87 +1,88 @@
-require('proto_extensions');
-require('proto_creep');
-require('proto_structure');
-require('proto_room');
+var ScreepsStats = require('./lib_screepsstats');
+global.Stats = new ScreepsStats();
+
+require('./prototype_extensions');
+require('./prototype_creep');
+require('./prototype_room');
+require('./prototype_flag');
+require('./prototype_room_position');
+require('./prototype_structure_base');
+require('./prototype_structure_spawn');
+require('./prototype_structure_tower');
+require('./prototype_structure_terminal');
+require('./prototype_structure_lab');
 
 var scripts = {
-    room : require('room'),
-    utils : require('utils'),
-    logFactory : require('logger-factory'),
-    stats: require('collect-stats')
-}
+    room : require('./room'),
+    utils : require('./utils_misc'),
+    logFactory : require('./utils_logger_factory')
+};
+
 module.exports.loop = function () {
     //return;
-    var settings = require("settings");
-    
+    console.log("Hi geek night")
     var cpuLog = scripts.logFactory.getCPULogger();
     var tickLogger = scripts.logFactory.getCPULogger();
     tickLogger.startReading("tick");
-    // Flags:
-    // Rally - will lead all soldiers to this flag. Secondary color determines the number of soldiers.
-    // Room-EXXNYY - will lead a single explorer to another room. 
 
-    var memoryManager = require('memory-management');
+    var memoryManager = require('./utils_memory_management');
     memoryManager.cleanUp();
-    
-    var colony = require('colony');
+
 
     // Perform rooms
     //var room = require('room');
-    for(var i in Game.rooms){
-        if(!Memory.rooms[i]){
+    // Initialize rooms which are visible, but not yet in memory.
+    for(var roomName in Game.rooms){
+        if(!Memory.rooms[roomName]){
             try {
-                Game.rooms[i].initialize();
+                Game.rooms[roomName].initialize();
                 // End this tick early.
                 return;
             } catch (e) {
-                console.log("Exception processing room "+i+"\n"+e);
+                console.log("Exception processing room "+roomName+"\n"+e.stack);
             }
         }
     }
     
     cpuLog.startReading("rooms");
-    for(var i in Memory.rooms){
+    for(var roomName in Memory.rooms){
         try {
-            scripts.room.perform(i);
-            //room.performTick();
+            scripts.room.perform(roomName);
         } catch (e) {
-            console.log("Exception processing room "+i+"\n"+e.stack);
+            console.log("Exception processing room "+roomName+"\n"+e.stack);
         }
     }
     cpuLog.endReading();
 
     // Perform creeps
     cpuLog.startReading("creeps");
-    var creepTemplates = require('creep-templates');
-    for(var i in Game.creeps){
+    var creepTemplates = require('./settings_creeps');
+    for(var creepId in Game.creeps){
         try {
-            var template = creepTemplates[Memory.creeps[i].role];
-            template.action(Game.creeps[i]);
+            var template = creepTemplates[Memory.creeps[creepId].role];
+            template.action(Game.creeps[creepId]);
         } catch(e) {
-            console.log("Exception processing creep: "+Game.creeps[i].room.name +" "+Game.creeps[i].name+"\n"+e)
+            console.log("Exception processing creep: "+Game.creeps[creepId].room.name +" "+Game.creeps[creepId].name+"\n"+e)
         }
     }
     cpuLog.endReading();
     
     // Perform structures
-    var structure_definitions = require('structure_definitions');
-    for(var i in Game.structures){
-        var definition = structure_definitions[Game.structures[i].structureType];
-        if(definition && definition.action){
-            definition.action(Game.structures[i]);
-        }
+    for(var structureId in Game.structures){
+        var structure = Game.structures[structureId];
+        structure.perform();
     }
     
     // Perform harvest groups
     
     
     // Perform Event schedules
-    var schedule = require('event_scheduler');
+    var schedule = require('./event_scheduler');
     schedule.processActions();
 
-    var events = require("event_definitions");
-    for(var i in events){
-        var event = events[i];
+    var events = require("./event_definitions");
+    for(var eventName in events){
+        var event = events[eventName];
         if(!Memory.EventRegistry[event.name]){
             if(!event.disabled){
                 schedule.registerAction(event.name, event.module, event.functionName, event.parameters, event.interval);
@@ -93,6 +94,5 @@ module.exports.loop = function () {
         }
     }
     tickLogger.endReading("tick");
-    scripts.stats.exportStats();
-    //Memory.remove('___screeps_stats');
+    Stats.runBuiltinStats();
 }

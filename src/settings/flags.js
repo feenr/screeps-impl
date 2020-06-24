@@ -22,7 +22,14 @@ module.exports = [
         type : "setting",
         default : 0
     },
-    
+
+    {
+        prefix : "Parent-",
+        type : "locaction",
+        x : 2,
+        y : 2
+    },
+
     {
         prefix : "Cantina-",
         type : "location",

@@ -5,7 +5,7 @@ module.exports = [
             functionName : "distributeEnergy", 
             parameters : {}, 
             interval : 10,
-            disabled : true
+            disabled : false
         },
         {
             name : "constructRoads", 
@@ -29,7 +29,7 @@ module.exports = [
             functionName : "upgradeWalls",
             parameters : {},
             interval : 50,
-            disabled : true
+            disabled : false
         },
         {
           name : "spawnCreeps",

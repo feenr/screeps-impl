@@ -8,7 +8,7 @@
  module.exports = function(aTower){
     var tower = aTower;
     var room = tower.room;
-    var allies = require('settings_allies');
+    var allies = require('./settings_allies');
    
     perform(tower);
     

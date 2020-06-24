@@ -1,15 +1,16 @@
-var harvest = require('role_harvester'); 
-var build = require('role_builder');
-var soldier = require('role_soldier');
-var research = require('role_researcher');
-var deliver = require('role_messenger');
-var colonize = require('role_colonizer');
-var explore = require('role_explorer');
-var spawner = require('role_spawn_builder');
-var healer = require('role_healer');
-var mine = require('role_miner');
-var rangedAttack = require('role_ranged_soldier');
-var deconstructor = require('role_deconstructor');
+var harvest = require('./role_harvester');
+var build = require('./role_builder');
+var soldier = require('./role_soldier');
+var research = require('./role_researcher');
+var deliver = require('./role_messenger');
+var colonize = require('./role_colonizer');
+var explore = require('./role_explorer');
+var spawner = require('./role_spawn_builder');
+var healer = require('./role_healer');
+var mine = require('./role_miner');
+var rangedAttack = require('./role_ranged_soldier');
+var deconstructor = require('./role_deconstructor');
+var reserve = require('./role_reserver');
 
 module.exports = {
     harvester : {
@@ -78,17 +79,23 @@ module.exports = {
     healer: {
         role : 'healer',
         skills: [HEAL, MOVE],
-        action: healer,
+        action: healer
     },
     miner: {
         role : 'miner',
         skills: [MOVE, WORK, WORK, WORK],
-        action: mine,
+        action: mine
     },
     rangedSoldier: {
         role : 'rangedSoldier',
         skills: [MOVE, RANGED_ATTACK],
-        action: rangedAttack,
+        action: rangedAttack
+    },
+    reserver: {
+        role : 'reserver',
+        skills: [MOVE, CLAIM],
+        action: reserve,
+        maxSize: 10
     }
     
-}
+};

@@ -1,7 +1,7 @@
 module.exports = (function(){
     var publicAPI = {};
-    var settings = require('settings');
-    var utils = require('utils');
+    var settings = require('./utils_settings_registry');
+    var utils = require('./utils_misc');
 
     publicAPI.distributeEnergy = function(){
         for(var roomId in Game.rooms){

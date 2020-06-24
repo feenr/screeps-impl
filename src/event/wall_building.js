@@ -1,13 +1,13 @@
 
 module.exports = (function(){
-    var utils = require('utils');
-    var settings = require('settings');
-    var logFactory = require('logger-factory');
+    var utils = require('./utils_misc');
+    var settings = require('./utils_settings_registry');
+    var logFactory = require('./utils_logger_factory');
     var publicAPI = {};
     var defaultWallSize = 1000;
     var incrementWallSize = 2000;
     var maxWallSize = 900000;
-    var SETTING_WALL_SIZE = "WallSize"
+    var SETTING_WALL_SIZE = "WallSize";
     
     publicAPI.storeWalls = function(roomId){
         var wallLocations = [];
@@ -36,7 +36,7 @@ module.exports = (function(){
         }
         
         settings.set("wallPositions",wallLocations, roomId);
-    }
+    };
     
     publicAPI.constructWalls = function(){
         /**
@@ -52,10 +52,9 @@ module.exports = (function(){
             }
         }
         **/
-    }
+    };
     
     publicAPI.upgradeWalls = function(){
-        
         Memory.rooms = Memory.rooms || {};
         for(var i in Memory.rooms){
             var log = logFactory.getRoomLogger(i).log;
@@ -64,15 +63,13 @@ module.exports = (function(){
                 wallSize = defaultWallSize;
             }
 
-        
             var repairsNeeded = false;
             var currRoom = Game.rooms[i];
             if(!currRoom){
                 // This room in memory is not visible
                 continue;
             }
-            
-                        
+
             if(currRoom.find(FIND_MY_CONSTRUCTION_SITES).length > 0){
                 log("Construction needs to be done, not upgrading walls.");
                 continue;
@@ -80,7 +77,7 @@ module.exports = (function(){
             
             var existingWalls = currRoom.find(FIND_STRUCTURES, {filter: utils.isA('constructedWall')});
             for(var k = 0; k < existingWalls.length; k++){
-                existingWall = existingWalls[k];
+                var existingWall = existingWalls[k];
                 if(existingWall.hits < wallSize){
                     log("Repairs needed, not upgrading walls.");
                     repairsNeeded = true;
@@ -96,8 +93,6 @@ module.exports = (function(){
             }
             settings.set(SETTING_WALL_SIZE, wallSize, i);
         }
-        
-    }
-    
+    };
     return publicAPI;
-})()
+})();
