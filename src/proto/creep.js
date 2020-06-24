@@ -1,5 +1,62 @@
  module.exports = (function(){
 
+         ////////////
+         // Fields //
+         ////////////
+
+         Creep.prototype.states = [];
+         Creep.prototype.performComplete = false;
+         Creep.prototype.moveComplete = false;
+
+         ///////////////////////
+         // Utility Functions //
+         ///////////////////////
+
+         Creep.prototype.getLogger = function(){
+             if(!this.log){
+                 this.log = require("utils_logger_factory").getCreepLogger(this).log;
+             }
+             return this.log;
+         };
+
+         //////////////////////////
+         // Life cycle functions //
+         //////////////////////////
+
+         Creep.prototype.performStates = function(){
+             var log = this.getLogger();
+             if(this.isLowOnTicks()){
+                 this.dropCarryAndSuicide();
+                 return;
+             }
+             if(typeof(this.getState()) == 'undefined'){
+                 this.setState(0);
+             }
+             var previousState = this.getPreviousState();
+             try{
+                 this.states[this.getState()].action.call(this , this);
+             } catch (e) {
+                 log(e.stack);
+                 this.setState(0);
+             }
+             if(this.getState() != previousState){
+                 this.say(this.getRole().substring(0,4) +":"+this.getPreviousState() + " > " + this.getState());
+                 this.setPreviousState(this.getState());
+             }
+         };
+
+         Creep.prototype.stuck = function(){
+             var log = this.getLogger();
+             //log(this.name);
+             this.moveToHomeRoom();
+             if(this.room.name == this.memory.room){
+                 this.setState(1);
+             }
+         };
+
+         //////////////////////
+         // Status Functions //
+         //////////////////////
     Creep.prototype.needsRenew = function() {
         return this.ticksToLive < 300;
     }
@@ -7,6 +64,10 @@
     Creep.prototype.isExpensive = function() {
         return (this.body.size >= 6 || this.body.indexOf(HEAL)> -1);
     }
+
+    Creep.prototype.isLowOnTicks = function(){
+     return this.ticksToLive <= 30;
+    };
     
     Creep.prototype.carryAmount = function(){
         return _.sum(this.carry);
@@ -19,7 +80,11 @@
     Creep.prototype.carryEmpty = function(){
         return _.sum(this.carry) == 0;
     }
-    
+
+     /////////////
+     // Actions //
+     /////////////
+
     Creep.prototype.moveToAndRequestRenew = function(){
         
         var spawn = null;
@@ -182,5 +247,36 @@
         }
         this.moveToAndWait(waitFlag);
     }
+
+    ////////////////////////////////
+    // Memory getters and setters //
+    ////////////////////////////////
+
+    Creep.prototype.getHomeRoom = function(){
+     return this.memory.room;
+    };
+
+    Creep.prototype.getState = function(){
+     return this.memory.state;
+    };
+    Creep.prototype.setState = function(state){
+     this.memory.state = state;
+    };
+
+    Creep.prototype.getPreviousState = function(){
+     return this.memory.previousState;
+    };
+    Creep.prototype.setPreviousState = function(state){
+     this.memory.previousState = state;
+    };
+
+    Creep.prototype.getRole = function(){
+     return this.memory.role;
+    };
+
+    Creep.prototype.moveToHomeRoom = function(){
+     var pos = new RoomPosition(25, 25, this.getHomeRoom());
+     this.moveToAndWait(pos);
+    };
 }
 )();
