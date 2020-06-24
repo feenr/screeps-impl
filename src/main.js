@@ -24,13 +24,9 @@ var scripts = {
 };
 
 module.exports.loop = function () {
-
-    var cpuLog = scripts.logFactory.getCPULogger();
-    var tickLogger = scripts.logFactory.getCPULogger();
-    tickLogger.startReading("tick");
     // Flags:
     // Rally - will lead all soldiers to this flag. Secondary color determines the number of soldiers.
-    // Room-EXXNYY - will lead a single explorer to another room. 
+    // Room-EXXNYY - will lead a single explorer to another room.
 
     var memoryManager = scripts.memoryManagement;
     memoryManager.cleanUp();
@@ -47,8 +43,8 @@ module.exports.loop = function () {
             }
         }
     }
-    
-    cpuLog.startReading("rooms");
+
+    // cpuLog.startReading("rooms");
     for(var roomName in Memory.rooms){
         try {
             scripts.room.perform(roomName);
@@ -57,10 +53,10 @@ module.exports.loop = function () {
             console.log("Exception processing room "+roomName+"\n"+e.stack);
         }
     }
-    cpuLog.endReading();
+    // cpuLog.endReading();
 
     // Perform creeps
-    cpuLog.startReading("creeps");
+    // cpuLog.startReading("creeps");
     var creepTemplates = scripts.creepSettings;
     for(var creepId in Game.creeps){
         try {
@@ -70,17 +66,17 @@ module.exports.loop = function () {
             console.log("Exception processing creep: "+Game.creeps[creepId].room.name +" "+Game.creeps[creepId].name+"\n"+e)
         }
     }
-    cpuLog.endReading();
-    
+    // cpuLog.endReading();
+
     // Perform structures
     for(var structureId in Game.structures){
         var structure = Game.structures[structureId];
         structure.perform();
     }
-    
+
     // Perform harvest groups
-    
-    
+
+
     // Perform Event schedules
     var schedule = scripts.eventsScheduler;
     schedule.processActions();
@@ -98,6 +94,6 @@ module.exports.loop = function () {
             }
         }
     }
-    tickLogger.endReading("tick");
+    // tickLogger.endReading("tick");
     scripts.stats.exportStats();
 };

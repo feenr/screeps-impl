@@ -91,7 +91,7 @@ module.exports = (function(){
     }
 
     function constructionCompleteEvent(structure){
-        console.log("CONSTRUCTION COMPLETE"+structure.structureType);
+        console.log("Construction complete: "+structure.structureType);
     }
 
     function lookForDroppredResourced(){
@@ -234,6 +234,9 @@ module.exports = (function(){
     }
 
     function performNeutralRoom(room){
+        if(!room){
+            return;
+        }
         setEnabledDisabled();
         if(settings.get("disabled", room.name)){
             return;
