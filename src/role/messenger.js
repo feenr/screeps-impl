@@ -1,7 +1,7 @@
 // Spreads from harvest groups, to other expansions.
 
 module.exports = function(creep){
-    var queueManager = require('queue_manager');
+    var queueManager = require('queue-manager');
     var utils = require('utils');
     var roleBase = require('role_base');
     var state = -1;

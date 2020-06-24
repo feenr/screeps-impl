@@ -10,7 +10,7 @@ module.exports = (function(){
     };
 
     publicAPI.getCreepLogger = function(creep){
-        var creepTemplates = require("creep_templates");
+        var creepTemplates = require("creep-templates");
         var color = creepTemplates[creep.memory.role].color || 'white';
         var logger = {};
         var roomName = creep.room.name;

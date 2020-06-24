@@ -6,8 +6,8 @@ require('proto_room');
 var scripts = {
     room : require('room'),
     utils : require('utils'),
-    logFactory : require('logger_factory'),
-    stats: require('collect_stats')
+    logFactory : require('logger-factory'),
+    stats: require('collect-stats')
 }
 module.exports.loop = function () {
     //return;
@@ -20,7 +20,7 @@ module.exports.loop = function () {
     // Rally - will lead all soldiers to this flag. Secondary color determines the number of soldiers.
     // Room-EXXNYY - will lead a single explorer to another room. 
 
-    var memoryManager = require('memory_management');
+    var memoryManager = require('memory-management');
     memoryManager.cleanUp();
     
     var colony = require('colony');
@@ -52,7 +52,7 @@ module.exports.loop = function () {
 
     // Perform creeps
     cpuLog.startReading("creeps");
-    var creepTemplates = require('creep_templates');
+    var creepTemplates = require('creep-templates');
     for(var i in Game.creeps){
         try {
             var template = creepTemplates[Memory.creeps[i].role];

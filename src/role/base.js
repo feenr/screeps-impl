@@ -74,7 +74,7 @@ module.exports = (function(){
     function considerEuthanasia(creep){
         if(creep.ticksToLive <= 30){
             if(creep.carry.energy == 0){
-                var log = require("logger_factory").getCreepLogger(creep).log;
+                var log = require("logger-factory").getCreepLogger(creep).log;
                 log("Euthanising myself")
                 //console.log(creep.room.name+": Euthanising "+creep.name);
                 creep.suicide();

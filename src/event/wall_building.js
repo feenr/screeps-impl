@@ -2,7 +2,7 @@
 module.exports = (function(){
     var utils = require('utils');
     var settings = require('settings');
-    var logFactory = require('logger_factory');
+    var logFactory = require('logger-factory');
     var publicAPI = {};
     var defaultWallSize = 1000;
     var incrementWallSize = 2000;

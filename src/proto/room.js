@@ -1,6 +1,6 @@
 module.exports = (function() {
   var utils = require('utils');
-  var logFactory = require("logger_factory");
+  var logFactory = require("logger-factory");
   var settings = require('settings');
   var roomScript = require('room');
 
@@ -114,7 +114,7 @@ module.exports = (function() {
     //settings.set("parentRoom", findParentRoom(), room.name);
 
     if(room.controller) {
-      var creepTemplates = require('creep_templates');
+      var creepTemplates = require('creep-templates');
       var targetCreepCounts = {};
       for(var i in creepTemplates){
         targetCreepCounts[creepTemplates[i].role] = 0;
