@@ -1,8 +1,8 @@
 module.exports = (function(){
-    var settings = require('settings');
-    var templates = require('creep-templates'); 
-    var utils = require('utils');
-    var queueManager = require('queue-manager');
+    var settings = require('settings_registry');
+    var templates = require('settings_creeps');
+    var utils = require('utils_misc');
+    var queueManager = require('utils_queue-manager');
 
     var room;
     var spawns;
@@ -15,11 +15,21 @@ module.exports = (function(){
         room = Game.rooms[roomName];
 
         if(!room || !room.controller || !room.controller.my){
-            performNeutralRoom();
+
+            if(!room){
+                room = new FoggedRoom(roomName);
+                Room.updateNeutralSettings(roomName);
+                spawnExplorer(room);
+                return;
+            } else {
+                room.updateSettings();
+                performNeutralRoom(room);
+            }
+
             return;
         }
 
-        log = require("logger-factory").getRoomLogger(room.name).log;
+        log = room.getLogger();
         spawns = room.find(FIND_MY_SPAWNS);
 
 
@@ -28,74 +38,10 @@ module.exports = (function(){
         }
         performTransfers();
         processHarvestGroups();
-        updateRoomSettings();
+        room.updateSettings();
+        processConstructionSites();
         //lookForDroppredResourced();
     }
-
-    function updateRoomSettings(){
-        var targetCreepCounts = settings.get("targetCreepCounts", room.name);
-        targetCreepCounts.researcher = room.getSettingFromFlag("Researchers");
-        targetCreepCounts.harvester = getHarvestorCount();
-        targetCreepCounts.explorer = getExplorerCount();
-        targetCreepCounts.builder = room.getSettingFromFlag("Builders");
-        targetCreepCounts.messenger = room.getSettingFromFlag("Messengers");
-        targetCreepCounts.deconstructor = 0;
-        targetCreepCounts.colonizer = 0;
-        targetCreepCounts.soldier = 0;
-        targetCreepCounts.healer = targetCreepCounts.soldier -2; 
-        targetCreepCounts.rangedSoldier = 0;
-        targetCreepCounts.soldier = 0;
-        if(room.name == 'W5S1'){
-            targetCreepCounts.colonizer= 0;
-        }
-        if(room.name == 'W13N2'){
-            targetCreepCounts.spawner= 0;
-        }
-        if(room.name == 'W1N1'){
-            targetCreepCounts.soldier = 0;
-        }
-        
-    }
-    
-    function getHarvestorCount(){
-        var count = 0; 
-        var harvesterGroups = findChildHarvesterGroups();
-        for(var i =0; i <  harvesterGroups.length; i++){
-            count += harvesterGroups[i].targetHarvesterCount;
-        }
-
-        return count;
-    }
-    
-    function getSoldierCount(){
-        if(settings.get('defaultRoom') != room.name){
-            return 0;
-        }
-        var count = 0;
-        var flag = Game.flags["Rally-"+room.name];
-        if(flag){
-            count = flag.getSetting();
-        }
-        return count;
-    }
-    
-    function getColonizerCount(){
-        var count = 0;
-        for(var i in Game.flags){
-            if(i.indexOf("Claim") ==0){
-                count++;
-            }
-        }   
-        return count;
-    }
-
-    function getExplorerCount(){
-        if(Game.flags["Explore-"+room.name]){
-            return 1;
-        }
-        return 0;
-    }
-
 
     function performTransfers(){
         if(room.memory.spawnsNeeded){
@@ -115,6 +61,39 @@ module.exports = (function(){
         }
     }
 
+    function processConstructionSites(){
+        var sites = room.getMyConstructionSites();
+        room.memory.constructionSites = room.memory.constructionSites || {};
+        for(var i in sites){
+            var site = sites[i];
+            if(!room.memory.constructionSites[site.id]){
+                room.memory.constructionSites[site.id] = {
+                    type : sites[i].structureType,
+                    x : site.pos.x,
+                    y : site.pos.y
+                };
+            }
+        }
+        for(var k in room.memory.constructionSites){
+            if(!Game.getObjectById(k)){
+                var missingSite = room.memory.constructionSites[k];
+                var lookAtResult  =room.lookAt(missingSite.x, missingSite.y);
+                lookAtResult = _.filter(lookAtResult, function(o){return o.type == 'structure'});
+                lookAtResult = _.map(lookAtResult, function(o){return o.structure});
+                for(var n in lookAtResult){
+                    if(lookAtResult[n].structureType == missingSite.type){
+                        constructionCompleteEvent(lookAtResult[n]);
+                        delete room.memory.constructionSites[k];
+                    }
+                }
+            }
+        }
+    }
+
+    function constructionCompleteEvent(structure){
+        console.log("CONSTRUCTION COMPLETE"+structure.structureType);
+    }
+
     function lookForDroppredResourced(){
         var droppedResourceQueue = queueManager.getQueue(room,"droppedResources");
         var droppedResources = room.find(FIND_DROPPED_RESOURCES);
@@ -128,13 +107,18 @@ module.exports = (function(){
 
     function spawnCreeps(roomName){
         room = Game.rooms[roomName];
-        log = require("logger-factory").getRoomLogger(room.name).log;
+        log = require("utils_logger-factory").getRoomLogger(room.name).log;
         room.memory.spawnsNeeded = false;
         spawns = room.find(FIND_MY_SPAWNS);
         var targetCreepCounts = settings.get("targetCreepCounts", room.name);
+        // TODO This should not happen but it do
+        if(!targetCreepCounts){
+            log("ERROR: room.spawnCreeps targetCreepCounts is null");
+            return;
+        }
         for(var i in templates){
             var template = templates[i];
-            var currentCreepCount = room.getCreepsByRole(template.role).length;
+            var currentCreepCount = room.getAssignedCreepsByRole(template.role).length;
             if(currentCreepCount < (targetCreepCounts[template.role] || 0)){
                 log("Need to spawn "+template.role+" ("+currentCreepCount + "/" + targetCreepCounts[template.role]+")");
                 for(var i in spawns) {
@@ -150,17 +134,27 @@ module.exports = (function(){
                     }
                 }
                 break;
+            } else if(currentCreepCount > (targetCreepCounts[template.role] || 0)){
+                if((targetCreepCounts[template.role] || 0) > 0){
+                    log("Room has too many "+template.role+" "+ currentCreepCount+"'s: / "+(targetCreepCounts[template.role] || 0));
+                }
             }
         }
         var spawnQueue = queueManager.getQueue(room, 'requestSpawns');
         if(spawnQueue.size() > 0){
-            var creepRequest = spawnQueue.shift();
+            var creepRequest = spawnQueue.peekBottom();
             for(var i in spawns) {
                 var spawn = spawns[i];
                 if (!spawn.spawning && !spawn.spawnQueued) {
-                    addCreep(spawn, templates[creepRequest.role], creepRequest.memory);
-                    spawn.spawnQueued = true;
-                    break;
+                    var status = addCreep(spawn, templates[creepRequest.role], creepRequest.memory);
+                    if(typeof status != "number" || status >= 0){
+                        log("Spawning queued "+creepRequest.role+" with memory "+JSON.stringify(creepRequest.memory));
+                        spawnQueue.shift();
+                        spawn.spawnQueued = true;
+                        break;
+                    } else {
+                        log("Failed to spawn queued "+creepRequest.role+" with memory "+JSON.stringify(creepRequest.memory)+": "+status);
+                    }
                 }
             }
         }
@@ -172,7 +166,7 @@ module.exports = (function(){
         var creepCost = 0;
         var parts = [];
         var partIndex = 0;
-        
+
         //Only create a creep when the spawn is full?
         if(totalAvailable < totalStorage){
             //log("Waiting for energy: "+totalAvailable+" / "+totalStorage)
@@ -180,7 +174,7 @@ module.exports = (function(){
                 return;
             }
         }
-        
+
         if(template.cappedSize){
             parts = template.skills;
         } else {
@@ -211,7 +205,7 @@ module.exports = (function(){
             }
         }
         // This creep won't have the minimum requirements. Exit here.
-    
+
         // Move all heavy parts to the start of the array
         var toughParts = [];
         parts = parts.filter(function(part){
@@ -225,7 +219,9 @@ module.exports = (function(){
         parts = toughParts.concat(parts);
         memory = memory || {};
         memory.role = template.role;
-        memory.room = room.name;
+        if(!memory.room){
+            memory.room = room.name;
+        }
         var spawnedCreep = spawn.createCreep(parts, null, memory);
 
         if(typeof spawnedCreep != 'string'){
@@ -237,9 +233,54 @@ module.exports = (function(){
         }
     }
 
-    function performNeutralRoom(){
+    function performNeutralRoom(room){
         setEnabledDisabled();
+        if(settings.get("disabled", room.name)){
+            return;
+        }
+        if(room.hasInvaders()){
+            return;
+        }
+        // return here fixes JSON exception.
+        if(room.needsReservation()) {
+            if (room.getAssignedCreepsByRole('reserver').length < 1) {
+                var parentRoom = room.getParentRoom();
+                if (parentRoom) {
+                    var queue = room.getParentRoom().getSpawnQueue();
+                    var queueRequest = {role: "reserver", memory: {room: room.name}};
+                    if (queue.containsCount(queueRequest) < 1) {
+                        queue.push(queueRequest);
+                    }
+                }
+            }
+        }
+        var remoteHarvesterCount = (room.getHarvestGroups().length-1) * 2;
+        if(room.getAssignedCreepsByRole('messenger').length < remoteHarvesterCount){
+            var parentRoom = room.getParentRoom();
+            if(parentRoom) {
+                var queue = parentRoom.getSpawnQueue();
+                var queueRequest = {role: "messenger", memory: {room: room.name}};
+                if (queue.containsCount(queueRequest) < 1) {
+                    queue.push(queueRequest);
+                }
+            }
+        }
 
+        processHarvestGroups();
+    }
+
+    function spawnExplorer(foggedRoom){
+        var explorerCount = foggedRoom.getAssignedCreepsByRole("explorer").length
+        if(explorerCount < 1){
+            var parentRoom = foggedRoom.getParentRoom();
+            if(parentRoom){
+                var queue = room.getParentRoom().getSpawnQueue();
+                var queueRequest = {role:"explorer", memory :{ room: room.name}}
+                if(queue.containsCount(queueRequest) < 1){
+                    queue.push(queueRequest);
+                }
+            }
+        }
     }
 
     function setEnabledDisabled(){
@@ -252,155 +293,29 @@ module.exports = (function(){
         }
     }
 
-    function findChildHarvesterGroups(){
-        var harvesterGroups = [];
-        for(var i in Memory.rooms){
-            if(settings.get("disabled", i)){
-                continue;
-            }
-            
-            // Only count rooms with visibility and a flag
-            if(!Game.rooms[i]){
-                continue;
-            }
-            if(i != room.name && settings.get("parentRoom", i) != room.name){
-                continue;
-            }
-            for(var k in Memory.rooms[i].harvestGroups){
-                var harvestGroup = Memory.rooms[i].harvestGroups[k]
-                harvesterGroups.push(harvestGroup);
-            }
-        }
-        return harvesterGroups;
-    }
-
-
     function checkRoomLevel(){
         var level = settings.get("CurrentLevel", room.name);
         if(level != room.controller.level){
-            performLevelUp(room.controller.level);
+            room.performLevelUp();
             return true;
         }
     }
 
-    function performLevelUp(level){
-        log("Upgraded to level "+ level);
-        settings.set("CurrentLevel", room.controller.level, room.name);
-        switch(level){
-            case 1:
-                createSpawn();
-                break;
-            case 2:
-                createExtensions(5);
-                break;
-            case 3:
-                createTower();
-                createExtensions(5);    
-                break;
-            case 4:
-                createStorage();
-                createExtensions(10);
-                enableMineralHarvestGroup();
-                break;
-            case 5:
-                createTower();
-                createLink(2);
-                createExtensions(10);
-                break;
-            case 6:
-                createExtensions(10);
-                createLink();
-                createExtractor();
-                break;
-            case 7:
-                createTower();
-                createLink();
-                createExtensions(10);
-                break;
-            case 8:
-                createExtensions(10);
-                break;
-            default:
-                // Do nothing
-        }
-    }
-    function createSpawn() {
-        createStructure("Spawn-", STRUCTURE_SPAWN);
-    }
-
-    function createTower(){
-        createStructure("Tower-", STRUCTURE_TOWER);
-    }
-
-    function createLink(count){
-        createStructure("Link-", STRUCTURE_LINK, count);
-    }
-
-    function createStorage(){
-        createStructure("Storage-", STRUCTURE_STORAGE);
-    }
-    
-    function createExtractor(){
-        var minerals = room.getMinerals();
-        for(var i in minerals){
-            room.createConstructionSite(minerals[i].pos, STRUCTURE_EXTRACTOR);
-        }
-    }
-
-    function createStructure(flagName, structureType, count){
-        if(typeof count != 'number'){
-            count = 1;
-        }
-        log("Creating a "+structureType+" construction site.");
-        for(var i in Game.flags){
-            if(Game.flags[i].name.indexOf(flagName)==0 && Game.flags[i].room == room){
-                if(room.createConstructionSite(Game.flags[i].pos, structureType) == 0){
-                    Game.flags[i].remove();
-                    count--;
-                    if(count == 0){
-                        break;
-                    }
-                }
-            }
-        }
-    }
-
-    function createExtensions(count){
-        log("Creating "+count+" extensions");
-        var extensionPosition = null;
-        for(var i in Game.flags){
-            if(Game.flags[i].room == room && Game.flags[i].name.indexOf("Extension-")==0){
-                extensionPosition = Game.flags[i].pos;
-            }
-        }
-        if(!extensionPosition){
+    /* Just wanted to get this working... will move this*/
+    function claimRoom(roomName){
+        room = Game.memory.room();
+        if(room && !room.needsReservation()){
             return;
         }
-        var latticePositions = utils.getLatticePositions(extensionPosition, 50);                
-        var createdExtensions = 0;
-        for(var i in latticePositions){
-            var status = room.createConstructionSite(latticePositions[i].x, latticePositions[i].y, STRUCTURE_EXTENSION);
-            if(status == 0){
-                createdExtensions++;
-            }
-            if(createdExtensions == count){
-                break;
-            }       
+        for(var i in Game.creeps){
+
         }
     }
-    
-    function enableMineralHarvestGroup(){
-        for(var i in room.memory.harvestGroups){
-            var groupTarget = Game.getObjectById(i);
-            if(groupTarget instanceof Mineral){
-                room.memory.harvestGroup[i].targetHarvesterCount = 1;
-            }
-        }
-    }
-    
+
     var publicAPI = {};
     publicAPI.perform = perform;
     publicAPI.spawnCreeps = spawnCreeps;
+    publicAPI.claimRoom = claimRoom;
     return publicAPI;
 })();
 

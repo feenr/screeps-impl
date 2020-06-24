@@ -13,7 +13,7 @@ module.exports = (function(){
       objectType = 'spawn'
     } else if (gameObject instanceof Creep){
       objectType = 'creep'
-    } else if (gameObject instanceof Game) {
+    } else if (gameObject.gpl !== undefined) {
       objectType = 'game';
       id = 'global';
     } else {

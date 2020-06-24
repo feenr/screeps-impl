@@ -3,7 +3,7 @@
  * module.exports.thing = 'a thing';
  *
  * You can import it from another modules like this:
- * var mod = require('collect_stats');
+ * var mod = require('collect-stats');
  * mod.thing == 'a thing'; // true
  */
 

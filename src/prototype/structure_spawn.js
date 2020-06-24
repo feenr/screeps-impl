@@ -10,7 +10,7 @@ module.exports = (function(){
     };
 
     StructureSpawn.prototype.performTransfers = function(){
-      if(this.energy == 0){
+      if(this.energy === 0){
         return;
       }
       var creeps = this.room.getMyCreeps();
@@ -24,7 +24,7 @@ module.exports = (function(){
       creeps = _.sortBy(creeps, function(o){return o.carry.energy});
       if (creeps[0]) {
           var transferAmount = utils.getTransferAmount(this, creeps[0]);
-          this.transferEnergy(creeps[0], transferAmount);
+          creeps[0].withdraw(this, RESOURCE_ENERGY, transferAmount)
       }
     };
   }

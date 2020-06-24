@@ -3,11 +3,11 @@
  * module.exports = 'a thing';
  *
  * You can import it from another modules like this:
- * var mod = require('utils'); // -> 'a thing'
+ * var mod = require('utils_misc'); // -> 'a thing'
  */
  module.exports = (function(){
     var publicAPI = {};
-    var settings = require('settings');
+    var settings = require('settings_registry');
 
 
    publicAPI.RoomName = function(name){

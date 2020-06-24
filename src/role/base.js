@@ -1,5 +1,5 @@
 module.exports = (function(){
-    var utils = require("utils");
+    var utils = require("utils_misc");
     var publicAPI = {};
 
     publicAPI.performStates = function(creep, states){
@@ -73,9 +73,9 @@ module.exports = (function(){
     
     function considerEuthanasia(creep){
         if(creep.ticksToLive <= 30){
-            if(creep.carry.energy == 0){
-                var log = require("logger-factory").getCreepLogger(creep).log;
-                log("Euthanising myself")
+            if(creep.carry.energy === 0){
+                var log = require("utils_logger-factory").getCreepLogger(creep).log;
+                log("Euthanising myself");
                 //console.log(creep.room.name+": Euthanising "+creep.name);
                 creep.suicide();
             }

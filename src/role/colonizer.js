@@ -1,5 +1,4 @@
 module.exports = function(creep){
-    var utils = require('utils');
     var roleBase = require('role_base');
 
     var states = [

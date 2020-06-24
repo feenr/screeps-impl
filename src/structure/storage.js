@@ -8,7 +8,7 @@
  
  module.exports = function(){
     // Get a list of all storage structures
-    var utils = require('utils');
+    var utils = require('utils_misc');
     var room = utils.getRoom();
     var energyGiverTypes = ["STRUCTURE_EXTENSION", "STRUCTURE_STORAGE"];
     var structures = room.find(FIND_STRUCTURES);

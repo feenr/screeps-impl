@@ -1,8 +1,8 @@
 module.exports = (function() {
-  var queueManager = require('utils_queue_manager');
+  var queueManager = require('utils_queue-manager');
   var utils = require('utils_misc');
-  var logFactory = require("utils_logger_factory");
-  var settings = require('utils_settings_registry');
+  var logFactory = require("utils_logger-factory");
+  var settings = require('settings_registry');
 
   Room.prototype.creepsByRole = {};
   Room.prototype.assignedCreepsByRole = {};
@@ -16,7 +16,7 @@ module.exports = (function() {
     if(this.log){
       return this.log;
     } else {
-      this.log = require("utils_logger_factory").getRoomLogger(this.name).log;
+      this.log = logFactory.getRoomLogger(this.name).log;
       return this.log;
     }
   };
@@ -106,8 +106,12 @@ module.exports = (function() {
     Memory.rooms[room.name] = {};
     this.initializeSourceHarvestGroups();
     this.initializeMineralHarvestGroups();
-    settings.set("disabled", true, room.name);
-    //settings.set("parentRoom", findParentRoom(), room.name);
+
+    if(Game.rooms.length === 1){
+        settings.set("disabled", false, room.name);
+    } else {
+        settings.set("disabled", true, room.name);
+    }
 
     if(room.controller) {
       var creepTemplates = require('settings_creeps');
@@ -144,7 +148,7 @@ module.exports = (function() {
           if(flag.count){
             for(var k = 1; k <= flag.count; k++){
               ypos = flag.y+k;
-              flagName = flag.prefix+"-"+k+"-"+room.name;
+              flagName = flag.prefix+k+"-"+room.name;
               room.createFlag(xpos, ypos, flagName);
             }
             continue;
@@ -164,7 +168,7 @@ module.exports = (function() {
     var harvestGroup = null;
     for(var i = 0; i < sources.length; i++){
       harvestGroup = {
-        targetHarvesterCount : sources[i].pos.getOpenAdjacentPositionsCount()
+        targetHarvesterCount : sources[i].pos.getOpenAdjacentPositionsCount()+1
       };
       harvestGroups[sources[i].id] = harvestGroup;
     }
@@ -317,7 +321,7 @@ module.exports = (function() {
         break;
       case 6:
         this.createExtensions(10);
-        createLink();
+        this.createLink();
         this.createExtractor();
         break;
       case 7:

@@ -1,22 +1,17 @@
 module.exports = function(nodeId){
-    var utils = require("utils");
-    var settings = require('settings');
+    var settings = require('settings_registry');
     var id = nodeId;
     var energyNode = Game.getObjectById(nodeId);
     var room = energyNode.room;
     var roomId = room.name;
 
-    
     //Stored in memory
     var targetEnergyStore;
     var targetHarvesterCount;
     var targetMinerCount;
-    
     var harvesterList;
     var minerList;
-    
-    
-    
+
     getFromMemory();
     perform();
 
@@ -118,7 +113,7 @@ module.exports = function(nodeId){
         targetHarvesterCount = Memory.rooms[roomId].harvestGroups[nodeId].targetHarvesterCount
     }
     
-    var debugTable = function(){
+    function debugTable(){
         var node = Game.getObjectById(id);
         for(var i in harvesterList){
             var harvesterId = harvesterList[i];

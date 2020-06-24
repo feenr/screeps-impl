@@ -1,6 +1,6 @@
 
 module.exports = (function(){
-    var utils = require('utils');
+    var utils = require('utils_misc');
     var storeRoads = function(roomName){
         var roomId;
         var room;
