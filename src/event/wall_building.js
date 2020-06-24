@@ -1,8 +1,8 @@
 
 module.exports = (function(){
-    var utils = require('./utils_misc');
-    var settings = require('./utils_settings_registry');
-    var logFactory = require('./utils_logger_factory');
+    var utils = require('utils_misc');
+    var settings = require('utils_settings_registry');
+    var logFactory = require('utils_logger_factory');
     var publicAPI = {};
     var defaultWallSize = 1000;
     var incrementWallSize = 2000;

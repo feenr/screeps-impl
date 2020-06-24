@@ -1,8 +1,8 @@
 module.exports = (function() {
-  var queueManager = require('./utils_queue_manager');
-  var utils = require('./utils_misc');
-  var logFactory = require("./utils_logger_factory");
-  var settings = require('./utils_settings_registry');
+  var queueManager = require('utils_queue_manager');
+  var utils = require('utils_misc');
+  var logFactory = require("utils_logger_factory");
+  var settings = require('utils_settings_registry');
 
   Room.prototype.creepsByRole = {};
   Room.prototype.assignedCreepsByRole = {};
@@ -16,7 +16,7 @@ module.exports = (function() {
     if(this.log){
       return this.log;
     } else {
-      this.log = require("./utils_logger_factory").getRoomLogger(this.name).log;
+      this.log = require("utils_logger_factory").getRoomLogger(this.name).log;
       return this.log;
     }
   };
@@ -110,7 +110,7 @@ module.exports = (function() {
     //settings.set("parentRoom", findParentRoom(), room.name);
 
     if(room.controller) {
-      var creepTemplates = require('./settings_creeps');
+      var creepTemplates = require('settings_creeps');
       var targetCreepCounts = {};
       for(var i in creepTemplates){
         targetCreepCounts[creepTemplates[i].role] = 0;
@@ -126,7 +126,7 @@ module.exports = (function() {
     }
 
     function initializeFlags(){
-      var flagSettings = require('./settings_flags');
+      var flagSettings = require('settings_flags');
       var settingPosX = 0;
       var settingPosY = 49;
       for(var i in flagSettings){

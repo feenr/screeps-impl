@@ -1,8 +1,8 @@
 module.exports = (function(){
-  var settings = require('./utils_settings_registry');
-  var templates = require('./settings_creeps');
-  var utils = require('./utils_misc');
-  var queueManager = require('./utils_queue_manager');
+  var settings = require('utils_settings_registry');
+  var templates = require('settings_creeps');
+  var utils = require('utils_misc');
+  var queueManager = require('utils_queue_manager');
 
   var room;
   var spawns;
@@ -53,7 +53,7 @@ module.exports = (function(){
   }
 
   function processHarvestGroups(){
-    var harvestGroup = require('./harvest_group');
+    var harvestGroup = require('harvest_group');
     var groups = Memory.rooms[room.name].harvestGroups;
     groups = utils.sortByPriority(groups);
     for(var i in groups){
@@ -107,7 +107,7 @@ module.exports = (function(){
 
   function spawnCreeps(roomName){
     room = Game.rooms[roomName];
-    log = require("./utils_logger_factory").getRoomLogger(room.name).log;
+    log = require("utils_logger_factory").getRoomLogger(room.name).log;
     room.memory.spawnsNeeded = false;
     spawns = room.find(FIND_MY_SPAWNS);
     var targetCreepCounts = settings.get("targetCreepCounts", room.name);

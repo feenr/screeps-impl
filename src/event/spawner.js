@@ -1,5 +1,5 @@
  module.exports = (function(){
-   var room = require('./room');
+   var room = require('room');
 
    var performSpawns = function(roomName){
      for(var i in Game.rooms){

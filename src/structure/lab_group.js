@@ -15,8 +15,8 @@ module.exports = (function(){
 
 
   function perform() {
-    var mineralCraftQueue = require('./utils_queue_manager').getQueue(Game, 'craftMineral');
-    var mineralRequestQueue = require('./utils_queue_manager').getQueue(Room, 'requestMineral');
+    var mineralCraftQueue = require('utils_queue_manager').getQueue(Game, 'craftMineral');
+    var mineralRequestQueue = require('utils_queue_manager').getQueue(Room, 'requestMineral');
     var primaryLab = {};
     var secondaryLabs = [];
     var mineralComponents = [];
@@ -47,7 +47,7 @@ module.exports = (function(){
         // Complete the job
       }
     } else {
-      var mineralQueue = require('./utils_queue_manager');
+      var mineralQueue = require('utils_queue_manager');
       getQueue(Game, 'craftMineral');
       var nextJob = {};
       mineralComponents = utils.calculateComponents(nextJob.mineralType);

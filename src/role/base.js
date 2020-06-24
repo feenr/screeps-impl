@@ -1,5 +1,5 @@
 module.exports = (function(){
-    var utils = require("./utils_misc");
+    var utils = require("utils_misc");
     var publicAPI = {};
 
     publicAPI.performStates = function(creep, states){

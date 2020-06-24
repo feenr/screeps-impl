@@ -1,7 +1,7 @@
 
 module.exports = (function(){
-    var utils = require('./utils_misc');
-    var logFactory = require('./utils_logger_factory');
+    var utils = require('utils_misc');
+    var logFactory = require('utils_logger_factory');
     var storeRoads = function(roomName){
         var room;
         if(roomName != "" && roomName != null){

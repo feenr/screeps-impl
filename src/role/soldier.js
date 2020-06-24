@@ -6,7 +6,7 @@ module.exports = function(creep){
         return;
     }
     
-    var roleBase = require('./role_base');
+    var roleBase = require('role_base');
     if(roleBase.performRenew(creep)){
         return;
     }

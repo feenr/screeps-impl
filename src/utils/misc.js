@@ -1,6 +1,6 @@
 module.exports = (function(){
     var publicAPI = {};
-    var settings = require('./utils_settings_registry');
+    var settings = require('utils_settings_registry');
 
 
    publicAPI.RoomName = function(name){

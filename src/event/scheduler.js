@@ -31,7 +31,7 @@
             var event = eventRegistry[i];
             event.ticksRemaining--;
             if(event.ticksRemaining <= 0) {
-                var eventModule = require("./"+event.module);
+                var eventModule = require(""+event.module);
                 var parameters = event.parameters;
                 
                 eval("eventModule."+event.event+"("+JSON.stringify(parameters)+")");

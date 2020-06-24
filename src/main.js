@@ -1,21 +1,21 @@
-var ScreepsStats = require('./lib_screepsstats');
+var ScreepsStats = require('lib_screepsstats');
 global.Stats = new ScreepsStats();
 
-require('./prototype_extensions');
-require('./prototype_creep');
-require('./prototype_room');
-require('./prototype_flag');
-require('./prototype_room_position');
-require('./prototype_structure_base');
-require('./prototype_structure_spawn');
-require('./prototype_structure_tower');
-require('./prototype_structure_terminal');
-require('./prototype_structure_lab');
+require('prototype_extensions');
+require('prototype_creep');
+require('prototype_room');
+require('prototype_flag');
+require('prototype_room_position');
+require('prototype_structure_base');
+require('prototype_structure_spawn');
+require('prototype_structure_tower');
+require('prototype_structure_terminal');
+require('prototype_structure_lab');
 
 var scripts = {
-    room : require('./room'),
-    utils : require('./utils_misc'),
-    logFactory : require('./utils_logger_factory')
+    room : require('room'),
+    utils : require('utils_misc'),
+    logFactory : require('utils_logger_factory')
 };
 
 module.exports.loop = function () {
@@ -25,7 +25,7 @@ module.exports.loop = function () {
     var tickLogger = scripts.logFactory.getCPULogger();
     tickLogger.startReading("tick");
 
-    var memoryManager = require('./utils_memory_management');
+    var memoryManager = require('utils_memory_management');
     memoryManager.cleanUp();
 
 
@@ -56,7 +56,7 @@ module.exports.loop = function () {
 
     // Perform creeps
     cpuLog.startReading("creeps");
-    var creepTemplates = require('./settings_creeps');
+    var creepTemplates = require('settings_creeps');
     for(var creepId in Game.creeps){
         try {
             var template = creepTemplates[Memory.creeps[creepId].role];
@@ -77,10 +77,10 @@ module.exports.loop = function () {
     
     
     // Perform Event schedules
-    var schedule = require('./event_scheduler');
+    var schedule = require('event_scheduler');
     schedule.processActions();
 
-    var events = require("./event_definitions");
+    var events = require("event_definitions");
     for(var eventName in events){
         var event = events[eventName];
         if(!Memory.EventRegistry[event.name]){

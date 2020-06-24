@@ -1,7 +1,7 @@
 // Spreads from harvest groups, to other expansions.
 
 module.exports = function(creep){
-  var utils = require('./utils_misc');
+  var utils = require('utils_misc');
 
   creep.states = [
     {

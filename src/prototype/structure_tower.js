@@ -23,7 +23,7 @@ module.exports = (function(){
     StructureTower.prototype.performAttack = function(enemies){
       for(var i= 0; i < enemies.length; i++){
         var enemy = enemies[i];
-        var allies = require('./settings_allies');
+        var allies = require('settings_allies');
         if(allies.indexOf(enemy.owner.username) == -1){
           this.attack(enemy);
           return true;

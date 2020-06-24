@@ -1,4 +1,4 @@
-var tower = require('./structure_tower');
+var tower = require('structure_tower');
 
 module.exports = {
     tower : {
