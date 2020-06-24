@@ -24,8 +24,8 @@ module.exports = function(){
    *
    */
 
-  var utils = require('./utils_misc');
-  var queueManager = require('./utils_queue_manager');
+  var utils = require('utils_misc');
+  var queueManager = require('utils_queue_manager');
   var mineralRequestQueue = queueManager.getQueue(Game, 'requestMineral');
   StructureLab.prototype.isPrimary = function(){
     return this.memory.primary == true;

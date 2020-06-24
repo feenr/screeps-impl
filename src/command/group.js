@@ -1,7 +1,7 @@
 module.exports = function(){
   /**
-  var utils = require("./utils_misc");
-  var settings = require('./utils_settings_registry');
+  var utils = require("utils_misc");
+  var settings = require('utils_settings_registry');
   var id = "";
   var energyNode = Game.getObjectById(nodeId);
   var room = energyNode.room;

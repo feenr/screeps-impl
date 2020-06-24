@@ -1,5 +1,5 @@
 module.exports = (function(){
-  var queueManager = require('./utils_queue_manager');
+  var queueManager = require('utils_queue_manager');
   var mineralRequestQueue = queueManager.getQueue(Game, 'requestMineral');
   StructureTerminal.prototype.perform = function(){
     if(this.energy == 0){
