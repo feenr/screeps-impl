@@ -1,4 +1,4 @@
-# Source code for Screeps
+# Source code for my Screeps Account
 
 Install:
 ```
