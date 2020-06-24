@@ -1,6 +1,6 @@
 module.exports = function(creep){
-    var utils = require('utils');
-    var roleBase = require('role_base');
+    var utils = require('./utils_misc');
+    var roleBase = require('./role_base');
     
     var states = [
         {// 0
@@ -24,9 +24,7 @@ module.exports = function(creep){
     roleBase.performStates(creep,states);
     
     function collectEnergy(creep){
-        console.log(creep.name+ "1");
         if(Game.flags["Claim"] && Game.flags["Claim"].room != creep.room){
-        console.log(creep.name+ "2");
             creep.moveToAndWait(Game.flags["Claim"]);
             return;
         }
@@ -34,8 +32,8 @@ module.exports = function(creep){
             creep.memory.state = 2;
             return;
         }
-        var droppedResources = null;
-        //droppedResources = creep.room.find(FIND_DROPPED_RESOURCES)[0]
+
+        var droppedResources = creep.room.find(FIND_DROPPED_RESOURCES)[0]
         if(droppedResources){
             
             if(!creep.pos.isNearTo(droppedResources)){
@@ -45,7 +43,18 @@ module.exports = function(creep){
             }
             return;
         }
-        
+
+
+        var sources = creep.room.getSources();
+        for(var i in sources){
+            if(sources[i] && sources[i].energy > 0){
+                creep.moveToAndHarvest(sources[i]);
+                return;
+            }
+        }
+
+
+        /**
         var resource = Game.getObjectById("55c34a6b5be41a0a6e80c340");
         if(!resource || resource.energy == 0){
             resource = Game.getObjectById("55c34a6b5be41a0a6e80c33e");
@@ -54,6 +63,7 @@ module.exports = function(creep){
         if(resource){
             creep.moveToAndHarvest(resource);
         }
+         **/
         
     }
     
@@ -78,8 +88,12 @@ module.exports = function(creep){
         //creep.moveToAndRepair(damagedStructure);
         //creep.moveToAndRepair
         //console.log("hi")
-        var newSpawn = Game.getObjectById("57740c41efd3405c4bb33fa7");
-        creep.moveToAndBuild(newSpawn);
+
+        var constructionSites = creep.room.getMyConstructionSites();
+        creep.moveToAndBuild(constructionSites[0]);
+
+        //var newSpawn = Game.getObjectById("57740c41efd3405c4bb33fa7");
+        //creep.moveToAndBuild(newSpawn);
         
         //var newController = Game.getObjectById("55c34a6b5be41a0a6e80c33f");
         //creep.moveToAndUpgrade(newController);

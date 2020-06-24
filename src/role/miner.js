@@ -1,6 +1,6 @@
 module.exports = function(creep){
-    var utils = require('utils');
-    var roleBase = require('role_base');
+    var utils = require('./utils_misc');
+    var roleBase = require('./role_base');
     var states = [
         {// 0
             description:"Stuck", 

@@ -10,7 +10,7 @@
      * Search for a flag called Explore-[RoomName]
      **/
     function getExploreFlag() {
-        return Game.flags["Explore-"+creep.memory.room];
+        return Game.flags["Cantina-"+creep.memory.room].name;
     }
  }
  

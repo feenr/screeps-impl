@@ -1,5 +1,5 @@
 module.exports = function(creep){
-    var utils = require('utils');
+    var utils = require('./utils_misc');
 
     if(Game.flags["Rally"].room != creep.room){
         creep.moveToAndWait(Game.flags["Rally"]);

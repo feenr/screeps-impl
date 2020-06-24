@@ -1,10 +1,10 @@
 module.exports = function(creep){
-    var utils = require('utils');
-    var roleBase = require('role_base');
-    var states = [
+    var utils = require('./utils_misc');
+    var roleBase = require('./role_base');
+    creep.states = [
         {// 0
             description:"Stuck", 
-            action: stuck
+            action: creep.stuck
         },
         {// 1
             description:"Collect Energy", 
@@ -16,8 +16,9 @@ module.exports = function(creep){
         }
     ];
 
-    roleBase.performStates(creep, states);
-    
+    //roleBase.performStates(creep, states);
+    creep.performStates();
+
     function collectEnergy(creep){
         if(creep.carryFull()){
             creep.memory.state = 2;
@@ -37,16 +38,29 @@ module.exports = function(creep){
             creep.memory.transferId = "";
             return false;
         }
-        var target = null;
-        if(creep.memory.transferId != ""){
-            target = Game.getObjectById(creep.memory.transferId);
-        }
+
+        var target = creep.getObjectFromMemory("transferId");
         if(target == null){
             var target = findTransferTarget();
-            creep.memory.transferId = target.id;
+            if(target!=null){
+              creep.memory.transferId = target.id;
+            }
         }
+
+
+        // Check to see if the storage needs repair (Extension)
+        if(target instanceof StructureContainer) {
+          if (target.hits < (target.hitsMax*.75)) {
+            creep.moveToAndRepair(target);
+            return;
+          } // If target is a construction site, build it.
+        } else if (typeof target == 'ConstructionSite'){
+            creep.moveToAndBuild(target);
+        }
+        
         creep.moveToAndTransfer(target);
     }
+
     function stuck(creep){
         creep.idle();
         creep.memory.state = 1;
@@ -56,21 +70,34 @@ module.exports = function(creep){
         var transferTarget;
         var transferTargetId = null;
         var harvestGroup = null;
+        var roomName = "";
         
         for(var i in Memory.rooms){
             if(!Memory.rooms[i].harvestGroups){
                 continue;
             }
             if(Memory.rooms[i].harvestGroups[creep.memory.targetNode]){
+                roomName = i;
                 harvestGroup = Memory.rooms[i].harvestGroups[creep.memory.targetNode];
+                break;
             }
         }
+
         if(harvestGroup){
             transferTargetId = harvestGroup.targetEnergyStore;
         }
+
+
+
         if(transferTargetId){
             transferTarget = Game.getObjectById(transferTargetId);
-        } /**
+        } else {
+          if(Game.rooms[i]){
+            
+          }
+        }
+
+        /**
         if(!transferTarget || utils.getCreepCountByRole('messenger') == 0){
             // Move this to a static variable;
             for(var spawn in Game.spawns){

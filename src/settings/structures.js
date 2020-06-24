@@ -1,3 +1,7 @@
+var tower = require('./structure_tower');
+
 module.exports = {
-    wallSize : 45000
-};
+    tower : {
+        action: tower
+    }
+}

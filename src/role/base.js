@@ -1,5 +1,5 @@
 module.exports = (function(){
-    var utils = require("utils");
+    var utils = require("./utils_misc");
     var publicAPI = {};
 
     publicAPI.performStates = function(creep, states){
@@ -20,25 +20,21 @@ module.exports = (function(){
             creep.say(creep.memory.role.substring(0,4) +":"+creep.memory.previousState + " > " + creep.memory.state);
             creep.memory.previousState = creep.memory.state;
         }
-    }
+    };
     
-    publicAPI.stuck = function(){
+    publicAPI.stuck = function(creep){
         creep.memory.state = 1;
-    }
+    };
     
     publicAPI.performRenew = function(creep){
         if((creep.needsRenew() && creep.isExpensive) || creep.memory.renewing){
             if(creep.moveToAndRequestRenew()){
-                if(creep.ticksToLive >= 1000){
-                    creep.memory.renewing = false;
-                } else {
-                    creep.memory.renewing = true;
-                }
+                creep.memory.renewing = creep.ticksToLive < 1000;
                 return true;
             }
         }
         return false;
-    }
+    };
     
     publicAPI.findEnergySource = function(creep){
         var energySource;
@@ -62,21 +58,15 @@ module.exports = (function(){
                 energySource = spawns[0];
             }
         }
-        if(energySource == null ){
-            //energySource = Game.spawns.Spawn1;
-        }
-        
 
         return energySource;
-    }
-    
-    
+    };
+
     function considerEuthanasia(creep){
         if(creep.ticksToLive <= 30){
             if(creep.carry.energy == 0){
-                var log = require("logger-factory").getCreepLogger(creep).log;
-                log("Euthanising myself")
-                //console.log(creep.room.name+": Euthanising "+creep.name);
+                var log = creep.getLogger();
+                log("Euthanizing myself");
                 creep.suicide();
             }
             
