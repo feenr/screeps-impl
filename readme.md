@@ -1,5 +1,8 @@
 # Source code for my Screeps Account
 
+## Overview
+[Screeps](https://screeps.com/) is an open-world RTS game where units are controlled by defining their AI. This project has the current state of my screeps implementation.
+
 ## Installation
 ```
 npm install -g grunt-cli
