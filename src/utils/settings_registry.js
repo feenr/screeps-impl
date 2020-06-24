@@ -4,7 +4,7 @@ module.exports = (function(){
         Memory.settings = {};
     }
     /**
-     * Store a setting which is saved in memory. RoomId is option
+     * Store a setting which is saved in memory. RoomId is optional
      */
     function set(name, value, roomId){
         var localSettings = _getCallSpecificSettings(name, roomId);
@@ -12,7 +12,7 @@ module.exports = (function(){
     }
     
     /**
-     * Get a setting which is saved in memory. RoomId is option
+     * Get a setting which is saved in memory. RoomId is optional
      */
     function get(name, roomId){
         var localSettings = _getCallSpecificSettings(name, roomId);
