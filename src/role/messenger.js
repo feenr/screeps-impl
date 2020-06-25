@@ -2,49 +2,32 @@
 
 module.exports = function(creep){
     var utils = require('utils_misc');
-    var roleBase = require('role_base');
-    var state = -1;
-    var room = creep.room;
-    var roomId = room.name;
 
-    var STUCK = 0;
-    var COLLECT_ENERGY = 1;
-    var STORE_ENERGY = 2;
-
-
-    var states = [
+    creep.states = [
         {
             description : "stuck",
-            action : stuck
+            action : creep.stuck
         },
         {
-            description : "collectEnergy",
-            action : collectEnergy
+            description : "collectResource",
+            action : collectResources
         },
         {
-            description : "storeEnergy",
-            action : storeEnergy
+            description : "storeResources",
+            action : storeResources
         }
     ];
 
-    
-    roleBase.performStates(creep, states);
+    creep.performStates();
 
-    function stuck(creep){
-        creep.memory.state = 1;
-        creep.memory.energySourceId = "";
-        creep.memory.energyStoreId = "";
-    }
-    
-
-    function collectEnergy(){
+    function collectResources(){
         if(creep.carry.energy == creep.carryCapacity){
             creep.memory.state = 2;
             creep.memory.energySourceId = "";
             return false;
         }
         var energySource = null;
- 
+
         if(!creep.memory.energySourceId){
             energySource = findBestEnergySource();
         } else {
@@ -52,42 +35,26 @@ module.exports = function(creep){
         }
 
         if(!energySource
-          || energySource instanceof Structure && energySource.getEnergy() == 0){
+            || energySource instanceof Structure && energySource.getEnergy() == 0){
             creep.memory.energySourceId = null;
             return false;
         }
 
-        /**
-        if(!energySource
-          || energySource instanceof Structure && energySource.getEnergy() == 0
-          || !(energySource instanceof Resource)){
-            creep.memory.energySourceId = null;
-            return false;
-        } **/
-        
         creep.memory.energySourceId = energySource.id;
-        if(!creep.pos.isNearTo(energySource)){
-            creep.moveTo(energySource);
+        if(energySource instanceof Resource){
+            creep.moveToAndPickUp();
         } else {
-            if(energySource instanceof Resource){
-                creep.pickup()
-            } else if(energySource.structureType == 'container'){
-                creep.withdraw(energySource, RESOURCE_ENERGY);
-            }else if(energySource.structureType == 'storage'){
-                creep.withdraw(energySource, RESOURCE_ENERGY);
-            } else {
-                creep.withdraw(energySource, RESOURCE_ENERGY);
-            }
+            creep.moveToAndWithdraw(RESOURCE_ENERGY);
         }
 
-        if(creep.carry.energy == creep.carryCapacity){
+        if(creep.carryAmount() == creep.carryCapacity){
             creep.memory.energySourceId = "";
             creep.memory.state = 2;
             return;
         }
-    }  
-    
-    function storeEnergy(){
+    }
+
+    function storeResources(){
         var energyStore = null;
         if(!creep.memory.energyStoreId){
             energyStore = findEnergyStore();
@@ -97,6 +64,7 @@ module.exports = function(creep){
                 energyStore = findEnergyStore();
             }
         }
+
         if(!energyStore){
             creep.memory.state = 0;
             return false;
@@ -112,18 +80,23 @@ module.exports = function(creep){
             }
             creep.memory.energyStoreId = "";
         }
-        
-        if(creep.carry.energy == 0){
+
+        if(creep.carryAmount() == 0){
             creep.memory.state = 1;
             return;
         }
     }
-    
-    
-        
+
+
+
     function findBestEnergySource(){
+        var room = creep.room;
+        var parentRoomId = creep.getHomeRoom();
+        if(parentRoomId && Game.rooms[parentRoomId]){
+            room = Game.rooms[parentRoomId];
+        }
         var bestEnergySource = null;
-        
+
         var droppedResources = null;
         //droppedResources = creep.room.find(FIND_DROPPED_ENERGY)[0]
         if(droppedResources){
@@ -134,35 +107,34 @@ module.exports = function(creep){
             }
             return droppedResources[0];
         }
-        
+
         /**
-        var droppedResources = null;
-        var droppedResourceQueue = queueManager.getQueue(room,"droppedResources");
-        var resourceId = droppedResourceQueue.pop();
-        if(resourceId){
+         var droppedResources = null;
+         var droppedResourceQueue = queueManager.getQueue(room,"droppedResources");
+         var resourceId = droppedResourceQueue.pop();
+         if(resourceId){
             var resource = Game.getObjectById(droppedResourceQueue.pop());
             if(resource){
                 return resource;
             }
         }
-        **/
+         **/
         // Get a harvest group target
-        for(var i in Memory.rooms[creep.room.name].harvestGroups){
-            
+        for(var i in Memory.rooms[room.name].harvestGroups){
+
             if(bestEnergySource && bestEnergySource instanceof StructureLink){
                 break;
             }
-            
-            var harvestGroup = Memory.rooms[creep.room.name].harvestGroups[i];
+
+            var harvestGroup = Memory.rooms[room.name].harvestGroups[i];
             var energySource = Game.getObjectById(harvestGroup.targetEnergyStore);
             if(energySource instanceof StructureSpawn){
-                bestEnergySource = energySource;
                 continue;
             }
             if(energySource instanceof StructureLink){
-                var links = creep.room.find(FIND_MY_STRUCTURES, {filter:utils.isA('link')});
+                var links = room.find(FIND_MY_STRUCTURES, {filter:utils.isA('link')});
                 for(var k in links){
-                    if(links[k] != energySource && links[k].energy > 0 && !isHarvestGroupTarget(links[k].id)){
+                    if(links[k] != energySource && links[k].energy > 0 && !links[k].isHarvestGroupTarget()){
                         if(links[k].energy > 0){
                             bestEnergySource = links[k];
                         }
@@ -170,7 +142,6 @@ module.exports = function(creep){
                     }
                 }
             } else {
-                //console.log(creep.room + " " + creep.name + " " + energySource.structureType);
                 if(energySource && energySource.getEnergy() > 0){
                     bestEnergySource = energySource;
                 }
@@ -182,46 +153,53 @@ module.exports = function(creep){
             //    break;
             //}
         }
-        
+
         // Use a storage if it's above 25%
         if(bestEnergySource == null){
-            var storages = creep.room.find(FIND_MY_STRUCTURES, {filter:utils.isA('storage')});
+            var storages = room.find(FIND_MY_STRUCTURES, {filter:utils.isA('storage')});
             for(var i in storages){
                 if(storages[i].getFillPercentage() > 0.25){
                     bestEnergySource = storages[i];
                 }
             }
         }
-        
+
         // Try to find a full spawn
         if(bestEnergySource == null){
-            for(var i in creep.room.spawns){
-                if(creep.room.spawns[i].energy == creep.rooms[i].energyCapacity){
-                    bestEnergySource = creep.room.spawns[i];
+            for(var i in room.spawns){
+                if(room.spawns[i].energy == room.spawns[i].energyCapacity){
+                    bestEnergySource = room.spawns[i];
                     break;
                 }
             }
         }
         return bestEnergySource;
     }
-    
-    function findEnergyStore(){
 
-        var bestEnergyStore = null;
-        var lowestEnergy = Number.MAX_VALUE;
-        var structures = creep.room.find(FIND_MY_STRUCTURES);
-        
+    function findEnergyStore(){
+        var room = creep.room;
+        var homeRoomId = creep.getHomeRoom();
+        if(homeRoomId && Game.rooms[homeRoomId]){
+            var parentRoom = room.getParentRoom();
+            if(parentRoom != null){
+                room = parentRoom;
+            }
+        }
+
+        var structures = room.find(FIND_MY_STRUCTURES);
         // Check towers
         var towers = _.filter(structures, function(o){return o.structureType == 'tower' && o.energy < (o.energyCapacity-100);});
         if(towers.length > 0){
             return towers[0];
         }
-        
+
         // Check extensions
-        var extensions = _.filter(structures, function(o){return o.structureType == 'extension' && o.energy < o.energyCapacity;});
-        if(extensions.length > 0){
-            extension = creep.pos.findClosestByRange(extensions);
-            return extension;
+        if(creep.room == room){ // Only check these if in same room. findClosest in range function doesn't work otherwise.
+            var extensions = _.filter(structures, function(o){return o.structureType == 'extension' && o.energy < o.energyCapacity;});
+            if(extensions.length > 0){
+                extension = creep.pos.findClosestByRange(extensions);
+                return extension;
+            }
         }
 
         // Check spawns
@@ -229,28 +207,52 @@ module.exports = function(creep){
         if(spawns.length > 0 ){
             return spawns[0];
         }
-    
+
         // Check others
         var labs = _.filter(structures, function(o){return o.structureType == 'lab' && o.energy < o.energyCapacity});
         if(labs.length > 0){
             return labs[0];
         }
-  
+
         // Go to Storage
         var storages = _.filter(structures, {'structureType': 'storage'});
         if(storages.length > 0){
             return storages[0];
         }
+
         return;
     }
-    
-    function isHarvestGroupTarget(structureId){
-        for(var k in Memory.rooms[roomId].harvestGroups){
-            if(Memory.rooms[roomId].harvestGroups[k].targetEnergyStore == structureId || structureId == "57782bd69dd8fcf04472c52e"){
-                return true;
+
+    function findBestMineralSource(){
+        return creep.room.storage;
+    }
+
+    function findMineralStore(){
+        var room = creep.room;
+
+        // Get the first mineral type in carry
+        var mineralType = "";
+        for(var i in creep.carry){
+            if(i != 'energy'){
+                mineralType = i;
+                break;
             }
         }
-        return false;
+        var structures = room.find(FIND_MY_STRUCTURES);
+
+        // Check labs
+        var labs = _.filter(structures, function(o){return o.structureType == 'lab';});
+        for(var i in labs){
+            if(labs[i].memory.mineral == mineralType){
+                return lab[i];
+            }
+        }
+
+        // Check Terminal
+        if(room.terminal.needsMoreMineral()){
+            return room.terminal;
+        }
+
+        // Check storage
     }
-    
-}
+};

@@ -14,7 +14,7 @@
 
     Creep.prototype.getLogger = function(){
      if(!this.log){
-         this.log = require("utils_logger_factory").getCreepLogger(this).log;
+         this.log = require("utils_logger-factory").getCreepLogger(this).log;
      }
      return this.log;
     };

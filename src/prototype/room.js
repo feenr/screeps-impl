@@ -321,7 +321,7 @@ module.exports = (function() {
                 break;
             case 6:
                 this.createExtensions(10);
-                createLink();
+                this.createLink();
                 this.createExtractor();
                 break;
             case 7:

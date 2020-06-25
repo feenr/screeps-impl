@@ -20,12 +20,12 @@ module.exports = (function(){
             creep.say(creep.memory.role.substring(0,4) +":"+creep.memory.previousState + " > " + creep.memory.state);
             creep.memory.previousState = creep.memory.state;
         }
-    }
-    
+    };
+
     publicAPI.stuck = function(){
         creep.memory.state = 1;
-    }
-    
+    };
+
     publicAPI.performRenew = function(creep){
         if((creep.needsRenew() && creep.isExpensive) || creep.memory.renewing){
             if(creep.moveToAndRequestRenew()){
@@ -38,8 +38,8 @@ module.exports = (function(){
             }
         }
         return false;
-    }
-    
+    };
+
     publicAPI.findEnergySource = function(creep){
         var energySource;
         var links = creep.room.find(FIND_MY_STRUCTURES, {filter: utils.isA("link")});
@@ -65,12 +65,12 @@ module.exports = (function(){
         if(energySource == null ){
             //energySource = Game.spawns.Spawn1;
         }
-        
+
 
         return energySource;
-    }
-    
-    
+    };
+
+
     function considerEuthanasia(creep){
         if(creep.ticksToLive <= 30){
             if(creep.carry.energy === 0){
@@ -79,7 +79,7 @@ module.exports = (function(){
                 //console.log(creep.room.name+": Euthanising "+creep.name);
                 creep.suicide();
             }
-            
+
             var target = null;
             var storages = creep.room.find(FIND_MY_STRUCTURES, {filter: utils.isA("storage")});
             if(storages[0]){
@@ -87,10 +87,10 @@ module.exports = (function(){
             } else {
                 var spawns = creep.room.find(FIND_MY_SPAWNS);
                 if(spawns[0]){
-                  target = spawns[0];
+                    target = spawns[0];
                 }
             }
-            
+
             if(target){
                 creep.moveToAndTransferEnergy(target);
             }
@@ -98,6 +98,6 @@ module.exports = (function(){
         }
         return false;
     }
-    
+
     return publicAPI;
 })();

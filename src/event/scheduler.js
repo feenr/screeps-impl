@@ -33,7 +33,7 @@
             if(event.ticksRemaining <= 0) {
                 var eventModule = require(event.module);
                 var parameters = event.parameters;
-                
+                console.log("Executing event: "+eventName);
                 eval("eventModule."+event.event+"("+JSON.stringify(parameters)+")");
                 event.ticksRemaining = event.ticksTotal;
             }

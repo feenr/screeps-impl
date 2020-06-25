@@ -4,18 +4,18 @@ module.exports = function(creep){
     var roleBase = require('role_base');
     var DEFAULT_WAIT = 10;
     var disableBuilding = false;
-    
+
     var states = [
         {// 0
-            description:"Stuck", 
+            description:"Stuck",
             action: stuck
         },
         {// 1
-            description:"Collecting Energy", 
-            action: collectEnergy      
+            description:"Collecting Energy",
+            action: collectEnergy
         },
         {// 2
-            description:"Constructing", 
+            description:"Constructing",
             action: constructing
         },
         {// 3
@@ -23,7 +23,7 @@ module.exports = function(creep){
             action: waitForWork
         }
     ];
-    
+
 
     roleBase.performStates(creep, states);
 
@@ -39,7 +39,7 @@ module.exports = function(creep){
         }
         if(creep.memory.energySourceId != ""){
             energySource = Game.getObjectById(creep.memory.energySourceId);
-            
+
         }
         if(energySource == null || energySource.energy == 0){
             energySource = roleBase.findEnergySource(creep);
@@ -47,15 +47,15 @@ module.exports = function(creep){
                 creep.memory.energySourceId = energySource.id;
             }
         }
-        if(energySource instanceof Spawn){
-            creep.moveToAndWait(energySource);   
+        if(energySource instanceof StructureSpawn){
+            creep.moveToAndWait(energySource);
         } else {
             creep.moveToAndRequestEnergy(energySource);
         }
 
     }
-    
-    
+
+
     function constructing(creep){
         // Check for error and break conditions
         if(creep.carry.energy == 0){
@@ -67,7 +67,6 @@ module.exports = function(creep){
         var constructionSite = Game.getObjectById(creep.memory.constructionId);
         if(!constructionSite){
             constructionSite = getConstructionSite(creep);
-            
             if(constructionSite){
                 creep.memory.constructionId = constructionSite.id;
             } else {
@@ -76,23 +75,23 @@ module.exports = function(creep){
                 return;
             }
         }
-        
+
         if(constructionSite instanceof ConstructionSite){
-            creep.moveToAndBuild(constructionSite); 
+            creep.moveToAndBuild(constructionSite);
         } else {
             creep.moveToAndRepair(constructionSite);
         }
     }
-    
+
     function getConstructionSite(){
         // Repair walls and ramparts
         var walls = creep.room.find(FIND_STRUCTURES, {filter:utils.isA(["constructedWall", "rampart"])});
-        
+
         // Filter invulnerable walls, which will not have a hits property.
         walls = _.filter(walls, function(wall){
-            return wall.hits != undefined;
-        })
-        var smallestWall = null;
+            return wall.hits !== undefined;
+        });
+
         var smallestWall = _.reduce(walls, function(result, value){
             if(result.hits < value.hits){
                 return result;
@@ -100,22 +99,36 @@ module.exports = function(creep){
                 return value;
             }
         });
-        
+
         if(smallestWall.hits < (settings.get("WallSize", creep.room.name)*.5)){
             console.log("A wall is critically damaged. Fixing it.");
             return smallestWall;
         }
-        
-        // Build construction sites - TODO constrcution priority
-    	var targets = creep.room.find(FIND_CONSTRUCTION_SITES);
-        if(targets.length > 0 && !disableBuilding) {
-            console.log("Building a "+ targets[0].structureType)
-    		return targets[0];
+
+        // Repair damaged containers
+        var damagedBuildings = creep.room.find(FIND_STRUCTURES, {filter:utils.isA(["container"])});
+        var damagedBuilding = _.reduce(damagedBuildings, function(result, value){
+            if(result.hits < value.hits){
+                return result;
+            } else {
+                return value;
+            }
+        });
+
+        if(damagedBuilding && damagedBuilding.needsRepair()){
+            return damagedBuilding;
         }
-        console.log("No construction. upgrading walls");
+
+
+
+        // Build construction sites - TODO constrcution priority
+        var targets = creep.room.find(FIND_CONSTRUCTION_SITES);
+        if(targets.length > 0 && !disableBuilding) {
+            return targets[0];
+        }
         return smallestWall;
     }
-    
+
     function waitForWork(){
         if(typeof(creep.memory.waitTimer) == 'undefined' || creep.memory.waitTimer == -1){
             creep.memory.waitTimer = DEFAULT_WAIT;
@@ -128,17 +141,17 @@ module.exports = function(creep){
         }
         toTheCantina();
     }
-    
-	function toTheCantina(){
-	    for(var i in Game.flags){
-	        if(Game.flags[i].room == creep.room && i.indexOf("Cantina")==0){
-	            creep.moveToAndWait(Game.flags[i]);
-	        }
-	    }
-	}
-	
-	function stuck(){
-	    toTheCantina();
-	    creep.memory.state = 1;
-	}
-}
+
+    function toTheCantina(){
+        for(var flagName in Game.flags){
+            if(Game.flags[flagName].room == creep.room && flagName.indexOf("Cantina")==0){
+                creep.moveToAndWait(Game.flags[flagName]);
+            }
+        }
+    }
+
+    function stuck(){
+        toTheCantina();
+        creep.memory.state = 1;
+    }
+};
