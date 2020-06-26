@@ -22,62 +22,70 @@ module.exports = function(nodeId){
                 harvesterList.splice(i, 1);
             }
         }
-        
+
         if(settings.get("disabled", roomId)){
             return;
         }
-        
+
         // Check if the energy store is not defined or invalid
         if(!targetEnergyStore || !Game.getObjectById(targetEnergyStore)){
             // Find an appropriate energy store
             Memory.rooms[roomId].harvestGroups[nodeId].targetEnergyStore = findNearestEnergyStore();
         }
-        //if(!targetHarvesterCount || targetHarvesterCount ==0 ) {
-        //    targetHarvesterCount = utils.getOpen
-        //}
-        
-        // If we don't have enough harvesters on this node, find 
+
+        // If we don't have enough harvesters on this node, find
         // an idle one and assign it.
         if(harvesterList.length < targetHarvesterCount){
             var harvester = findUnassignedHarvester();
             if(harvester){
                 addHarvester(harvester);
+            } else {
+                var parentRoomName = settings.get("ParentRoom", roomId);
+                if(parentRoomName){
+                    var parentRoom = Game.rooms[parentRoomName];
+                    if(parentRoom){
+                        var queue = parentRoom.getSpawnQueue();
+                        var queueRequest = {role: "harvester", memory: {room: roomId}};
+
+                        if (queue.containsCount(queueRequest) < 1 && !parentRoom.hasInvaders()) {
+                            console.log(roomId + " Requesting a harvester");
+                            queue.push(queueRequest);
+                        }
+                    }
+                }
             }
         }
-        
-        var spawns = room.find(FIND_MY_SPAWNS);
-        var spawnCount = spawns.length;
-        if(spawnCount == 0){
-            Memory.rooms[roomId].harvestGroups[nodeId].parentRoom = settings.get('defaultRoom');
-        }
     }
-    
+
     function findUnassignedHarvester(){
         for(var i in Game.creeps){
             var harvester = Game.creeps[i];
             if(harvester.memory.role != 'harvester'){
                 continue;
             }
-            // cheap way of seeing if a room has spawns, 
+            // cheap way of seeing if a room has spawns,
             // although not 100% accurate.
             if(room.controller.my){
                 // If this room has a spawn, only choose from creeps already in the room.
                 if(harvester.room != room){
                     continue;
                 }
+                // Don't choose harvesters that belong to other rooms.
+                if(harvester.memory.room != room.name){
+                    continue;
+                }
             } else {
-                // If this room doesn't have a spawn, only choose from creeps in a parent room.
-                if(harvester.room.name != settings.get("parentRoom", room.name)){
+                if(harvester.memory.room != room.name){
                     continue;
                 }
             }
-            
+
             if(!harvester.memory.targetNode || harvester.memory.targetNode == ''){
                 return harvester;
             }
         }
     }
-    
+
     function findNearestEnergyStore(){
         var structures = room.find(FIND_STRUCTURES);
         var options = [];
@@ -90,6 +98,20 @@ module.exports = function(nodeId){
         var closest = energyNode.pos.findClosestByRange(options);
         if(closest){
             return closest.id;
+        }
+
+        if(closest == null){
+            var parentRoom = room.getParentRoom();
+            if(parentRoom){
+                if(parentRoom.storage){
+                    return parentRoom.storage.id;
+                } else {
+                    var spawn = parentRoom.findMySpawns()[0];
+                    if(spawn){
+                        return spawn.id;
+                    }
+                }
+            }
         }
         return null;
     }
