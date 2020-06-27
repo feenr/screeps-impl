@@ -4,6 +4,7 @@ module.exports = (function(){
     var utils = require('utils_misc');
     var queueManager = require('utils_queue-manager');
     var harvestGroup = require('harvest-group');
+    // var visuals = require('utils_visuals');
     var room;
     var log;
     var roomName;
@@ -27,7 +28,7 @@ module.exports = (function(){
 
             return;
         }
-
+        //visuals(room);
         log = room.getLogger();
         spawns = room.find(FIND_MY_SPAWNS);
 
