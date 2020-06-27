@@ -1,11 +1,22 @@
 module.exports = (function(){
 
     var publicAPI = {};
+
+    publicAPI.getLogger = function(roomName){
+        var logger = {};
+        logger.log = log;
+        logger.logEvent = logEvent;
+        logger.logError = logError;
+        return logger;
+    };
+
     publicAPI.getRoomLogger = function(roomName){
         var logger = {};
         logger.log = function(message){
             console.log("<font color=\"#809fff\"><a href='/a/#!/room/"+roomName+"'>"+roomName+"</a></font>: "+message);
         };
+        logger.logEvent = logEvent;
+        logger.logError = logError;
         return logger;
     };
 
@@ -19,6 +30,8 @@ module.exports = (function(){
                 console.log("<font type='highlight'><a href='/a/#!/room/" + roomName + "'>" + roomName + "</a></font> <span style='color:"+color+"'>" + creep.name + "</span>: " + message);
             }
         };
+        logger.logEvent = logEvent;
+        logger.logError = logError;
         return logger;
     };
 
@@ -30,6 +43,8 @@ module.exports = (function(){
                 console.log("<a href='/a/#!/room/" + roomName + "'>" + roomName + "</a> " + structure.structureType + ": " + message);
             }
         };
+        logger.logEvent = logEvent;
+        logger.logError = logError;
         return logger;
     }
     
@@ -51,13 +66,22 @@ module.exports = (function(){
             cpuUsed = (Math.round((Game.cpu.getUsed()-startCPU) * 100))/100
             console.log(eventName+": "+cpuUsed+" ");
         }
-        
+        logger.logEvent = logEvent;
+        logger.logError = logError;
         return logger;
     }
-    
 
-    publicAPI.getEventLogger = function(){
-
+    function logEvent(message){
+        console.log("<span style='color: yellow;'>" + message + "</span>");
     }
+
+    function logError(message){
+        console.log("<span style='color: yellow;'>" + message + "</span>");
+    }
+
+    function log(message){
+        console.log("<span style='color: gray;'>" + message + "</span>");
+    }
+
     return publicAPI;
 })();

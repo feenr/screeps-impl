@@ -24,49 +24,42 @@ var scripts = {
 };
 
 module.exports.loop = function () {
-    // Flags:
-    // Rally - will lead all soldiers to this flag. Secondary color determines the number of soldiers.
-    // Room-EXXNYY - will lead a single explorer to another room.
 
-    var memoryManager = scripts.memoryManagement;
-    memoryManager.cleanUp();
-    memoryManager.bootstrap();
+    const logger = scripts.logFactory.getLogger();
+    scripts.memoryManagement.bootstrap();
+    scripts.memoryManagement.cleanUp();
 
-    // Perform rooms
+    // Initialize new rooms
     for(var roomName in Game.rooms){
         if(!Memory.rooms[roomName]){
             try {
                 Game.rooms[roomName].initialize();
-                // End this tick early.
+                // Initialization is expensive. End this tick early.
                 return;
             } catch (e) {
-                console.log("Exception processing room "+roomName+"\n"+e);
+                logger.logError("Exception processing room "+roomName+"\n"+e);
             }
         }
     }
 
-    // cpuLog.startReading("rooms");
+    // Perform rooms
     for(var roomName in Memory.rooms){
         try {
             scripts.room.perform(roomName);
         } catch (e) {
-            console.log("Exception processing room "+roomName+"\n"+e.stack);
+            logger.logError("Exception processing room "+roomName+"\n"+e.stack);
         }
     }
-    // cpuLog.endReading();
 
     // Perform creeps
-    // cpuLog.startReading("creeps");
-    var creepTemplates = scripts.creepSettings;
     for(var creepId in Game.creeps){
         try {
-            var template = creepTemplates[Memory.creeps[creepId].role];
+            var template = scripts.creepSettings[Memory.creeps[creepId].role];
             template.action(Game.creeps[creepId]);
         } catch(e) {
-            console.log("Exception processing creep: "+Game.creeps[creepId].room.name +" "+Game.creeps[creepId].name+"\n"+e)
+            logger.logError("Exception processing creep: "+Game.creeps[creepId].room.name +" "+Game.creeps[creepId].name+"\n"+e)
         }
     }
-    // cpuLog.endReading();
 
     // Perform structures
     for(var structureId in Game.structures){
@@ -75,12 +68,13 @@ module.exports.loop = function () {
     }
 
     // Perform harvest groups
-
+    // TODO This is currently called in the room logic.
 
     // Perform Event schedules
     var schedule = scripts.eventsScheduler;
     schedule.processActions();
 
+    // Register scheduled events
     var events = scripts.eventDefinitions;
     for(var eventName in events){
         var event = events[eventName];
@@ -94,6 +88,7 @@ module.exports.loop = function () {
             }
         }
     }
-    // tickLogger.endReading("tick");
+
+    // Post tick stats for grafana
     scripts.stats.exportStats();
 };

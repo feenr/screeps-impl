@@ -1,15 +1,15 @@
-var harvest = require('role_harvester'); 
-var build = require('role_builder');
-var soldier = require('role_soldier');
-var research = require('role_researcher');
-var deliver = require('role_messenger');
-var colonize = require('role_colonizer');
-var explore = require('role_explorer');
-var spawner = require('role_spawn_builder');
-var healer = require('role_healer');
-var mine = require('role_miner');
-var rangedAttack = require('role_ranged_soldier');
-var deconstructor = require('role_deconstructor');
+const harvest = require('role_harvester'); 
+const build = require('role_builder');
+const soldier = require('role_soldier');
+const research = require('role_researcher');
+const deliver = require('role_messenger');
+const colonize = require('role_colonizer');
+const explore = require('role_explorer');
+const spawner = require('role_spawn_builder');
+const healer = require('role_healer');
+const mine = require('role_miner');
+const rangedAttack = require('role_ranged_soldier');
+const deconstructor = require('role_deconstructor');
 
 module.exports = {
     harvester : {

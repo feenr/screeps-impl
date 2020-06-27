@@ -1,7 +1,7 @@
 /*
  * Event timer allows you to register expensive events to only occur at a certain interval.
  * This allows you to spread out the processing of expensive events. Currently it only allows
- * register an event that occurs every X ticks, but we could update to execute at certain times.
+ * registering an event that occurs every X ticks, but we could update to execute at certain times.
  * see end for example
  */
  

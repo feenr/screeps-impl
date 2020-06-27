@@ -21,7 +21,7 @@ module.exports = (function(){
                 }
                 if(harvestGroupTargets.indexOf(linkA.id) >= 0){
                     for(var k in links){
-                        //Hardcoded for room W11N1
+                        // TODO Hardcoded for room W11N1
                         if(i == k || links[k].id == '575d43a3a8dd2ca351d5fc51'){ // Don't transfer to self
                             continue;
                         }
