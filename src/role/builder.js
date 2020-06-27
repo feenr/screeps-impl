@@ -91,18 +91,19 @@ module.exports = function(creep){
         walls = _.filter(walls, function(wall){
             return wall.hits !== undefined;
         });
+        if(walls.length > 0){
+            var smallestWall = _.reduce(walls, function(result, value){
+                if(result.hits < value.hits){
+                    return result;
+                } else {
+                    return value;
+                }
+            });
 
-        var smallestWall = _.reduce(walls, function(result, value){
-            if(result.hits < value.hits){
-                return result;
-            } else {
-                return value;
+            if(smallestWall.hits < (settings.get("WallSize", creep.room.name)*.5)){
+                console.log("A wall is critically damaged. Fixing it.");
+                return smallestWall;
             }
-        });
-
-        if(smallestWall.hits < (settings.get("WallSize", creep.room.name)*.5)){
-            console.log("A wall is critically damaged. Fixing it.");
-            return smallestWall;
         }
 
         // Repair damaged containers

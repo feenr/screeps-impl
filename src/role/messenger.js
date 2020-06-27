@@ -44,7 +44,7 @@ module.exports = function(creep){
         if(energySource instanceof Resource){
             creep.moveToAndPickUp();
         } else {
-            creep.moveToAndWithdraw(RESOURCE_ENERGY);
+            creep.moveToAndWithdraw(energySource, RESOURCE_ENERGY);
         }
 
         if(creep.carryAmount() == creep.carryCapacity){
@@ -121,7 +121,6 @@ module.exports = function(creep){
          **/
         // Get a harvest group target
         for(var i in Memory.rooms[room.name].harvestGroups){
-
             if(bestEnergySource && bestEnergySource instanceof StructureLink){
                 break;
             }
@@ -129,6 +128,7 @@ module.exports = function(creep){
             var harvestGroup = Memory.rooms[room.name].harvestGroups[i];
             var energySource = Game.getObjectById(harvestGroup.targetEnergyStore);
             if(energySource instanceof StructureSpawn){
+                bestEnergySource = energySource;
                 continue;
             }
             if(energySource instanceof StructureLink){

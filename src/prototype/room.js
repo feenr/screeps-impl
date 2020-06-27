@@ -3,6 +3,7 @@ module.exports = (function() {
     var utils = require('utils_misc');
     var logFactory = require("utils_logger-factory");
     var settings = require('settings_registry');
+    var HarvestGroup = require('harvest-group');
 
     Room.prototype.creepsByRole = {};
     Room.prototype.assignedCreepsByRole = {};
@@ -101,12 +102,8 @@ module.exports = (function() {
         var room = this;
         var log = this.getLogger();
         log("Initializing room");
-
-        Memory.rooms = Memory.rooms || (Memory.rooms = {});
         Memory.rooms[room.name] = {};
-        this.initializeSourceHarvestGroups();
-        this.initializeMineralHarvestGroups();
-
+        this.initializeHarvestGroups();
         if(Game.rooms.length === 1){
             settings.set("disabled", false, room.name);
         } else {
@@ -162,57 +159,41 @@ module.exports = (function() {
         }
     };
 
-    Room.prototype.initializeSourceHarvestGroups = function(){
-        var harvestGroups = Memory.rooms[this.name].harvestGroups || (Memory.rooms[this.name].harvestGroups = {});
-        var sources = this.getSources();
-        var harvestGroup = null;
-        for(var i = 0; i < sources.length; i++){
-            harvestGroup = {
-                targetHarvesterCount : sources[i].pos.getOpenAdjacentPositionsCount()+1
-            };
-            harvestGroups[sources[i].id] = harvestGroup;
+    Room.prototype.initializeHarvestGroups = function(){
+        let sources = this.getSources();
+        let minerals = this.getMinerals();
+        let harvestGroups = [];
+        for(let i = 0; i < sources.length; i++){
+            harvestGroups.push(new HarvestGroup(sources[i].id));
         }
+        for(let i = 0; i < minerals.length; i++){
+            harvestGroups.push(new HarvestGroup(minerals[i].id));
+        }
+        return harvestGroups;
     };
 
     Room.prototype.getHarvestGroups = function(){
-        var harvestGroups = [];
-        for(var i in this.memory.harvestGroups){
+        let harvestGroups = [];
+        for(let i in this.memory.harvestGroups){
             harvestGroups.push(this.memory.harvestGroups[i]);
         }
         return harvestGroups;
     };
 
-    Room.prototype.initializeMineralHarvestGroups = function(){
-        var harvestGroups = Memory.rooms[this.name].harvestGroups;
-        var minerals = this.getMinerals();
-        var targetEnergyStore = ""; // ToDo rename this variable...
-        var storages = this.find(FIND_MY_STRUCTURES, {filter: utils.isA("storage")});
-        if(storages[0]){
-            targetEnergyStore = storages[0].id;
-        }
-        for(var i = 0; i < minerals.length; i++){
-            var harvestGroup = {
-                targetHarvesterCount : 0,
-                targetEnergyStore : targetEnergyStore
-            };
-            harvestGroups[minerals[i].id] = harvestGroup;
-        }
-    };
-
     Room.prototype.findParentRoom = function(){
-        var roomNameObj = new utils.RoomName(this.name);
-        var yDir = roomNameObj.verticalDirection;
-        var xDir = roomNameObj.horizonalDirection;
-        var xPos = roomNameObj.horizontalPosition;
-        var yPos = roomNameObj.verticalPosition;
-        var potentialRooms = [];
+        let roomNameObj = new utils.RoomName(this.name);
+        let yDir = roomNameObj.verticalDirection;
+        let xDir = roomNameObj.horizonalDirection;
+        let xPos = roomNameObj.horizontalPosition;
+        let yPos = roomNameObj.verticalPosition;
+        let potentialRooms = [];
 
-        for(var x= xPos-1; x <= xPos+1; x++){
-            for(var y = yPos-1; y <= yPos+1; y++){
+        for(let x= xPos-1; x <= xPos+1; x++){
+            for(let y = yPos-1; y <= yPos+1; y++){
                 if(y == yPos && x == xPos){
                     continue;
                 }
-                var potentialRoomName = xDir + x + yDir + y;
+                let potentialRoomName = xDir + x + yDir + y;
                 if(Game.rooms[potentialRoomName]
                     && Game.rooms[potentialRoomName].controller
                     && Game.rooms[potentialRoomName].controller.my){
@@ -226,7 +207,7 @@ module.exports = (function() {
 
     Room.prototype.updateSettings = function(){
         if(this.isControlledRoom()) {
-            var targetCreepCounts = settings.get("targetCreepCounts", this.name);
+            let targetCreepCounts = settings.get("targetCreepCounts", this.name);
             // TODO, this shouldn't happen but it do
             if(!targetCreepCounts){
                 console.log("prototype_room.updateSettings"+this.name);
@@ -257,21 +238,21 @@ module.exports = (function() {
     };
 
     Room.prototype.isClaimedRoom = function(){
-        return this.controller && this.controller.my
+        return this.controller && this.controller.my;
     };
 
     Room.prototype.getHarvestorCount = function(){
-        var count = 0;
-        var harvesterGroups = this.findChildHarvesterGroups();
-        for(var i =0; i <  harvesterGroups.length; i++){
+        let count = 0;
+        let harvesterGroups = this.findChildHarvesterGroups();
+        for(let i =0; i <  harvesterGroups.length; i++){
             count += harvesterGroups[i].targetHarvesterCount;
         }
         return count;
     };
 
     Room.prototype.findChildHarvesterGroups = function(){
-        var harvesterGroups = [];
-        for(var i in Memory.rooms){
+        let harvesterGroups = [];
+        for(let i in Memory.rooms){
             if(settings.get("disabled", i)){
                 continue;
             }
@@ -280,11 +261,14 @@ module.exports = (function() {
             if(!Game.rooms[i]){
                 continue;
             }
-            if(i != this.name && settings.get("parentRoom", i) != this.name){
+            if(i !== this.name && settings.get("parentRoom", i) !== this.name){
                 continue;
             }
-            for(var k in Memory.rooms[i].harvestGroups){
-                var harvestGroup = Memory.rooms[i].harvestGroups[k]
+            for(let k in Memory.rooms[i].harvestGroups){
+                let harvestGroup = Memory.rooms[i].harvestGroups[k];
+                if(harvestGroup === null){ // This was caused by some bad memory in one of my games.
+                    continue;
+                }
                 harvesterGroups.push(harvestGroup);
             }
         }
@@ -293,8 +277,8 @@ module.exports = (function() {
 
 
     Room.prototype.performLevelUp = function(){
-        var log = this.getLogger();
-        var level = this.controller.level;
+        let log = this.getLogger();
+        let level = this.controller.level;
         log("Upgraded to level "+ level);
         settings.set("CurrentLevel", level, this.name);
         switch(level){
@@ -354,8 +338,8 @@ module.exports = (function() {
     };
 
     Room.prototype.createExtractor = function(){
-        var minerals = room.getMinerals();
-        for(var i in minerals){
+        let minerals = room.getMinerals();
+        for(let i in minerals){
             this.createConstructionSite(minerals[i].pos, STRUCTURE_EXTRACTOR);
         }
     };
@@ -364,10 +348,10 @@ module.exports = (function() {
         if(typeof count != 'number'){
             count = 1;
         }
-        for(var i in Game.flags){
+        for(let i in Game.flags){
             if(Game.flags[i].name.indexOf(flagName)==0 && Game.flags[i].room == room){
                 if(this.createConstructionSite(Game.flags[i].pos, structureType) == 0){
-                    var log = flag.room.getLogger();
+                    let log = flag.room.getLogger();
                     log("Created a "+structureType+" construction site.");
                     Game.flags[i].remove();
                     count--;
@@ -388,10 +372,10 @@ module.exports = (function() {
     }
 
     Room.prototype.createExtensions = function(count){
-        var log = this.getLogger();
+        let log = this.getLogger();
         log("Creating "+count+" extensions");
-        var extensionPosition = null;
-        for(var i in Game.flags){
+        let extensionPosition = null;
+        for(let i in Game.flags){
             if(Game.flags[i].room == this && Game.flags[i].name.indexOf("Extension-")==0){
                 extensionPosition = Game.flags[i].pos;
             }
@@ -399,10 +383,10 @@ module.exports = (function() {
         if(!extensionPosition){
             return;
         }
-        var latticePositions = utils.getLatticePositions(extensionPosition, 50);
-        var createdExtensions = 0;
-        for(var i in latticePositions){
-            var status = this.createConstructionSite(latticePositions[i].x, latticePositions[i].y, STRUCTURE_EXTENSION);
+        let latticePositions = utils.getLatticePositions(extensionPosition, 50);
+        let createdExtensions = 0;
+        for(let i in latticePositions){
+            let status = this.createConstructionSite(latticePositions[i].x, latticePositions[i].y, STRUCTURE_EXTENSION);
             if(status == 0){
                 createdExtensions++;
             }
@@ -413,8 +397,8 @@ module.exports = (function() {
     };
 
     Room.prototype.enableMineralHarvestGroup = function(){
-        for(var i in this.memory.harvestGroups){
-            var groupTarget = Game.getObjectById(i);
+        for(let i in this.memory.harvestGroups){
+            let groupTarget = Game.getObjectById(i);
             if(groupTarget instanceof Mineral){
                 this.memory.harvestGroups[i].targetHarvesterCount = 1;
             }
@@ -434,7 +418,7 @@ module.exports = (function() {
     };
 
     Room.prototype.getParentRoom = function(){
-        var parentRoomName = this.getSetting("ParentRoom");
+        let parentRoomName = this.getSetting("ParentRoom");
         if(parentRoomName){
             return Game.rooms[parentRoomName];
         } else {
@@ -448,7 +432,7 @@ module.exports = (function() {
 
     /** Static functions **/
     Room.updateNeutralSettings = function(roomName){
-        var parentFlag = Game.flags["Parent-"+roomName];
+        let parentFlag = Game.flags["Parent-"+roomName];
         if(parentFlag){
             settings.set("ParentRoom", parentFlag.pos.roomName, roomName);
         } else {

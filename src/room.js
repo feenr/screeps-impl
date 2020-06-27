@@ -3,9 +3,8 @@ module.exports = (function(){
     var templates = require('settings_creeps');
     var utils = require('utils_misc');
     var queueManager = require('utils_queue-manager');
-
+    var harvestGroup = require('harvest-group');
     var room;
-    var spawns;
     var log;
     var roomName;
     var spawns;
@@ -53,7 +52,6 @@ module.exports = (function(){
     }
 
     function processHarvestGroups(){
-        var harvestGroup = require('harvest-group');
         var groups = Memory.rooms[room.name].harvestGroups;
         groups = utils.sortByPriority(groups);
         for(var i in groups){
@@ -136,7 +134,7 @@ module.exports = (function(){
                 break;
             } else if(currentCreepCount > (targetCreepCounts[template.role] || 0)){
                 if((targetCreepCounts[template.role] || 0) > 0){
-                    log("Room has too many "+template.role+" "+ currentCreepCount+"'s: / "+(targetCreepCounts[template.role] || 0));
+                    log("Room has too many "+template.role+"s ("+ currentCreepCount+"/"+(targetCreepCounts[template.role] || 0)) + ")";
                 }
             }
         }

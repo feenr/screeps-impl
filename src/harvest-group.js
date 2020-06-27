@@ -1,8 +1,11 @@
 module.exports = function(nodeId){
     var settings = require('settings_registry');
+    var utils = require('utils_misc');
     var id = nodeId;
-    var energyNode = Game.getObjectById(nodeId);
-    var room = energyNode.room;
+    var node = Game.getObjectById(nodeId);
+    var room = node.room;
+    var roomName = node.room.name;
+    let log = room.getLogger();
     var roomId = room.name;
 
     //Stored in memory
@@ -48,7 +51,7 @@ module.exports = function(nodeId){
                         var queueRequest = {role: "harvester", memory: {room: roomId}};
 
                         if (queue.containsCount(queueRequest) < 1 && !parentRoom.hasInvaders()) {
-                            console.log(roomId + " Requesting a harvester");
+                            log("Requesting a harvester");
                             queue.push(queueRequest);
                         }
                     }
@@ -95,7 +98,7 @@ module.exports = function(nodeId){
                 options.push(structure);
             }
         }
-        var closest = energyNode.pos.findClosestByRange(options);
+        var closest = node.pos.findClosestByRange(options);
         if(closest){
             return closest.id;
         }
@@ -106,7 +109,7 @@ module.exports = function(nodeId){
                 if(parentRoom.storage){
                     return parentRoom.storage.id;
                 } else {
-                    var spawn = parentRoom.findMySpawns()[0];
+                    var spawn = parentRoom.getMySpawns()[0];
                     if(spawn){
                         return spawn.id;
                     }
@@ -125,8 +128,10 @@ module.exports = function(nodeId){
     }
     
     function getFromMemory(){
-        Memory.rooms[roomId] = Memory.rooms[roomId] || {};
         Memory.rooms[roomId].harvestGroups = Memory.rooms[roomId].harvestGroups || {};
+        if(!Memory.rooms[roomId].harvestGroups[nodeId]){
+            initialize();
+        }
         Memory.rooms[roomId].harvestGroups[nodeId] = Memory.rooms[roomId].harvestGroups[nodeId] || {};
         Memory.rooms[roomId].harvestGroups[nodeId].harvesterList = Memory.rooms[roomId].harvestGroups[nodeId].harvesterList || [];
         //Memory.rooms[roomId].harvestGroups[nodeId].targetHarvesterCount = Memory.rooms[roomId].harvestGroups[nodeId].targetHarvesterCount || 1;
@@ -143,9 +148,31 @@ module.exports = function(nodeId){
             console.log(harvesterId + " : "+ harvester.name + "["+harvester.pos.x+", "+harvester.pos.y+"]");
         }
     }
+
+    function initialize(){
+        let harvestGroups = Memory.rooms[roomName].harvestGroups || (Memory.rooms[roomName].harvestGroups = {});
+        console.log("Initializing"+nodeId);
+        if(node instanceof Source){
+            harvestGroup = {
+                targetHarvesterCount : node.pos.getOpenAdjacentPositionsCount()
+            };
+        } else if(node instanceof Mineral){
+            var storages = room.find(FIND_MY_STRUCTURES, {filter: utils.isA("storage")});
+            if(storages[0]){
+                targetEnergyStore = storages[0].id;
+            }
+             harvestGroup = {
+                targetHarvesterCount : 0,
+                targetEnergyStore : targetEnergyStore
+            };
+        }
+        harvestGroups[id] = harvestGroup;
+        return harvestGroup;
+    }
     
     var publicAPI = {};
     publicAPI.perform = perform;
     publicAPI.debugTable = debugTable;
+    publicAPI.initialize = initialize;
     return publicAPI;
 };

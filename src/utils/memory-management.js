@@ -20,7 +20,12 @@ module.exports = (function(){
                 delete Memory.queues['structure'][i];
             }
         }
-    }
-    
+    };
+
+    publicAPI.bootstrap = function(){
+        if(!Memory.rooms){
+            Memory.rooms = {};
+        }
+    };
     return publicAPI;
 })();

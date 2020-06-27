@@ -30,6 +30,7 @@ module.exports.loop = function () {
 
     var memoryManager = scripts.memoryManagement;
     memoryManager.cleanUp();
+    memoryManager.bootstrap();
 
     // Perform rooms
     for(var roomName in Game.rooms){
@@ -48,7 +49,6 @@ module.exports.loop = function () {
     for(var roomName in Memory.rooms){
         try {
             scripts.room.perform(roomName);
-            //room.performTick();
         } catch (e) {
             console.log("Exception processing room "+roomName+"\n"+e.stack);
         }

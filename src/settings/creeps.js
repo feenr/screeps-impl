@@ -14,7 +14,7 @@ var deconstructor = require('role_deconstructor');
 module.exports = {
     harvester : {
         role: 'harvester',
-        skills: [WORK, WORK, MOVE, CARRY],
+        skills: [MOVE, WORK, CARRY],
         maxSize: 19,
         action: harvest, 
         color: 'yellow'
