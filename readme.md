@@ -28,8 +28,9 @@ grunt
     - A set of **[structure-type]-[room-name]** flags in default locations where construction sites will automatically be generated. 
     They can be moved around manually to customize the room.
     - A set of **[unit-type]-[room-name]** flags which changing the color will change the number of units spawned in that room.
-- Setting a **Rally-[room-name]** flag will cause all attack units to swarm to the flag
+- Setting a **Rally** flag will cause all attack units to swarm to the flag
 - Setting an **Explore** flag in a room will cause an explore unit to spawn and navigate to that room
+- Setting a **Claim** flag in a room will cause an  reserver and a spawn builder to attempt to claim that room (I don't believe this is currently working, but that's the intent)
 - Adding a flag named **Parent-[child-room-name]** will set a parent-child relationship between two rooms
 
 ### Typical room
