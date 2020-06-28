@@ -44,20 +44,72 @@ module.exports = (function(){
         }
     }
 
+    function distanceTransform(roomName) {
+        console.log("Generating DT");
+        let vis = new RoomVisual(roomName);
+
+        let topDownPass = new PathFinder.CostMatrix();
+        for (let y = 0; y < 50; ++y) {
+            for (let x = 0; x < 50; ++x) {
+                if (Game.map.getTerrainAt(x, y, roomName) == 'wall') {
+                    topDownPass.set(x, y, 0);
+                }
+                else {
+                    topDownPass.set(x, y,
+                        Math.min(topDownPass.get(x-1, y-1), topDownPass.get(x, y-1),
+                            topDownPass.get(x+1, y-1), topDownPass.get(x-1, y)) + 1);
+                }
+            }
+        }
+
+        for (let y = 49; y >= 0; --y) {
+            for (let x = 49; x >= 0; --x) {
+                let value = Math.min(topDownPass.get(x, y),
+                    topDownPass.get(x+1, y+1) + 1, topDownPass.get(x, y+1) + 1,
+                    topDownPass.get(x-1, y+1) + 1, topDownPass.get(x+1, y) + 1);
+                topDownPass.set(x, y, value);
+                //vis.circle(x, y, {radius:value/25});
+            }
+        }
+
+        return topDownPass;
+    }
+
     function visualizeRoadLocations(roomName){
         let room = Game.rooms[roomName];
         if(room){
             let roadLocations = room.getSetting("roadLocations");
             if(roadLocations){
                 for(let i in roadLocations){
-                    room.visual.circle(roadLocations[i].x, roadLocations[i].y);
+                    room.visual.circle(roadLocations[i].x, roadLocations[i].y, {fill: "#ADD8E6", stroke: "#4863A0"});
                 }
             }
         }
     }
 
+    function visualizeDistanceTransform(roomName){
+        if(!Game.rooms[roomName]){
+            return;
+        }
+        let dt = Game.rooms[roomName].getSetting("distanceTransform");
+        if(!dt){
+            dt = distanceTransform().serialize();
+            Game.rooms[roomName].setSetting("distanceTransform", dt);
+        }
+        dt = PathFinder.CostMatrix.deserialize(dt)
+        for (let x = 0; x < 50; ++x) {
+            for (let y = 0; y < 50; ++y) {
+                // viz.text(costs.get(x, y), x, y, { font: 0.5 });
+                Game.rooms[roomName].visual.circle(x, y, {radius:dt.get(x, y)/75});
+            }
+        }
+
+    }
+
     return {
         visualizeWalls : visualizeWalls,
-        visualizeRoadLocations: visualizeRoadLocations
+        visualizeRoadLocations: visualizeRoadLocations,
+        visualizeDistanceTransform: visualizeDistanceTransform,
+        distanceTransform: distanceTransform
     }
 })();

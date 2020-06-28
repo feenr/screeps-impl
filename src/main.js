@@ -47,6 +47,7 @@ module.exports.loop = function () {
         try {
             scripts.room.perform(roomName);
             scripts.viz.visualizeRoadLocations(roomName);
+            //scripts.viz.visualizeDistanceTransform(roomName);
         } catch (e) {
             logger.logError("Exception processing room "+roomName+"\n"+e.stack);
         }

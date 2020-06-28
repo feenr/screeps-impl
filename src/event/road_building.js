@@ -54,15 +54,30 @@ module.exports = (function(){
         Memory.rooms = Memory.rooms || {};
         for(var i in Memory.rooms){
             var room = Game.rooms[i];
-            log("Roads reviewed");
-            var roadPositions = Memory.rooms[i].roadPositions;
+            if(!room){
+                return;
+            }
+            var roadPositions = room.getSetting("roadLocations");
+            // Roads not defined.
             if(!roadPositions){
                 return;
             }
-            for(var k = 0; k < roadPositions.length; k++){
-                var roadPosition = roadPositions[k];
-                room.createConstructionSite(roadPosition.x, roadPosition.y, STRUCTURE_ROAD);
+            // Don't add new construction sites if there are already 5 or more
+            if(room.find(FIND_CONSTRUCTION_SITES).length >= 5){
+                return;
             }
+            let queuedCount = 0;
+            for(var k = 0; k < roadPositions.length; k++){
+                let roadPosition = roadPositions[k];
+                let result = room.createConstructionSite(roadPosition.x, roadPosition.y, STRUCTURE_ROAD);
+                if(result === OK){
+                    // Only add 5 new construction sites at a time.
+                    if(++queuedCount>5){
+                        break;
+                    }
+                }
+            }
+            console.log("Created "+queuedCount+ " road construction sites.");
         }
     };
 
@@ -90,6 +105,9 @@ module.exports = (function(){
                 room.createConstructionSite(x, y, STRUCTURE_ROAD);
             }
         }
+
+        // This removes any roads which have already been built from the queue
+        cleanUpRoadLocations(roomName);
     }
 
     /**
@@ -203,16 +221,21 @@ module.exports = (function(){
     function cleanUpRoadLocations(roomName){
         let room = Game.rooms[roomName];
         let roadLocations = room.getSetting("roadLocations");
+        console.log(JSON.stringify(roadLocations));
         for(let i in roadLocations){
-            room.lookAt
+            let structures = room.lookForAt(LOOK_STRUCTURES, roadLocations[i].x, roadLocations[i].y);
+            let roads = structures.filter((structure) => structure.structureType ===STRUCTURE_ROAD);
+            if(roads.length > 0){
+                roadLocations.splice(i, 1);
+            }
         }
-        room.getSetting("roadLocations", roadLocations);
+        room.setSetting("roadLocations", roadLocations);
     }
 
     var publicAPI = {};
     publicAPI.storeRoads = storeRoads;
     publicAPI.constructRoads = constructRoads;
     publicAPI.initializeRoads = initializeRoads;
-    publicAPI.visualizeRoadLocations = visualizeRoadLocations;
+    publicAPI.cleanUpRoadLocations = cleanUpRoadLocations;
     return publicAPI;
 })();

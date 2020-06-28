@@ -126,6 +126,25 @@ module.exports = (function() {
             initializeFlags();
         }
 
+        function determineFirstSpawnLocation(){
+            let positions = [];
+            let sources = this.find(FIND_SOURCES);
+            for(let i in sources){
+                positions.push(sources[i].pos)
+            }
+            positions.push(this.controller.pos);
+            let sumx = 0;
+            let sumy = 0;
+            for(let i in positions){
+                sumx+= positions[i].x;
+                sumy+= positions[i].y;
+            }
+            idealx = Math.floor(sumx / positions.length);
+            idealy = Math.floor(sumy / positions.length);
+            let idealLocation = {x: idealx, y: idealy}
+            // TODO Next find a spot that is in an open area.
+        }
+
         function initializeFlags(){
             var flagSettings = require('settings_flags');
             var settingPosX = 0;

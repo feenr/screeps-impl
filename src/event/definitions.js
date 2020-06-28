@@ -13,7 +13,7 @@ module.exports = [
             functionName : "constructRoads", 
             parameters : {}, 
             interval : 500,
-            disabled : true
+            disabled : false
         },
         {
             name : "constructWalls",
