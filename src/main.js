@@ -15,7 +15,6 @@ var scripts = {
     utils : require('utils_misc'),
     logFactory : require('utils_logger-factory'),
     stats: require('utils_collect-stats'),
-    colony: require('colony'),
     memoryManagement: require('utils_memory-management'),
     creepSettings: require('settings_creeps'),
     structureDefinitions: require('structure_definitions'),
