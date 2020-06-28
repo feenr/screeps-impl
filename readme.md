@@ -22,7 +22,7 @@ To publish code from the screeps server
 grunt
 ```
 
-Notes on gameplay
+### Notes on gameplay
 - Entering a room for the first time will initialize flags
     - A **disabled-[room-name]** flag which when deleted will cause the room to be run room processing each tick.
     - A set of **[structure-type]-[room-name]** flags in default locations where construction sites will automatically be generated. 
@@ -32,7 +32,7 @@ Notes on gameplay
 - Setting an **Explore** flag in a room will cause an explore unit to spawn and navigate to that room
 - Adding a flag named **Parent-[child-room-name]** will set a parent-child relationship between two rooms
 
-Typical room
+### Typical room
 ![image](https://user-images.githubusercontent.com/83574/85935277-f4e17480-b8bc-11ea-9011-c79dde6e4edb.png)
 
 
