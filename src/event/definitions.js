@@ -36,7 +36,7 @@ module.exports = [
           module : "event_spawner",
           functionName : "performSpawns",
           parameters : {},
-          interval : 3,
+          interval : 10,
           disabled : false
         }
 ];

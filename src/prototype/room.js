@@ -164,10 +164,12 @@ module.exports = (function() {
         let minerals = this.getMinerals();
         let harvestGroups = [];
         for(let i = 0; i < sources.length; i++){
-            harvestGroups.push(new HarvestGroup(sources[i].id));
+            // harvestGroups.push(new HarvestGroup(sources[i].id));
+            new HarvestGroup(sources[i].id);
         }
         for(let i = 0; i < minerals.length; i++){
-            harvestGroups.push(new HarvestGroup(minerals[i].id));
+            // harvestGroups.push(new HarvestGroup(minerals[i].id));
+            new HarvestGroup(minerals[i].id);
         }
         return harvestGroups;
     };
@@ -224,9 +226,8 @@ module.exports = (function() {
             targetCreepCounts.healer = targetCreepCounts.soldier - 2;
             targetCreepCounts.rangedSoldier = 0;
             targetCreepCounts.soldier = 0;
-            if (this.name == 'W9N4') {
-                targetCreepCounts.spawner = 0;
-            }
+            targetCreepCounts.spawner = 0;
+            targetCreepCounts.miner = 0;
         }
 
         Room.updateNeutralSettings(this.name);
@@ -348,14 +349,14 @@ module.exports = (function() {
         if(typeof count != 'number'){
             count = 1;
         }
-        for(let i in Game.flags){
-            if(Game.flags[i].name.indexOf(flagName)==0 && Game.flags[i].room == room){
-                if(this.createConstructionSite(Game.flags[i].pos, structureType) == 0){
+        for(let flagName in Game.flags){
+            if(Game.flags[flagName].name.indexOf(flagName)===0 && Game.flags[flagName].room === this){
+                if(this.createConstructionSite(Game.flags[flagName].pos, structureType) === 0){
                     let log = flag.room.getLogger();
                     log("Created a "+structureType+" construction site.");
-                    Game.flags[i].remove();
+                    Game.flags[flagName].remove();
                     count--;
-                    if(count == 0){
+                    if(count === 0){
                         break;
                     }
                 }

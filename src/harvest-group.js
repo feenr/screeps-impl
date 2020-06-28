@@ -15,10 +15,11 @@ module.exports = function(nodeId){
     var harvesterList;
     var minerList;
 
-    getFromMemory();
-    perform();
+    // perform();
 
     function perform(){
+        getFromMemory();
+
         // Remove all dead harvesters
         for(var i in harvesterList){
             if(!Game.getObjectById(harvesterList[i])){

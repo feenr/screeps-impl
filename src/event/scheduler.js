@@ -6,7 +6,7 @@
  */
  
  module.exports = (function(){
-    
+    const logger = require('utils_logger-factory').getLogger();
     var registerAction = function(name, module, event, parameters, ticks){
         var eventRegistry = getRegistry();
         eventRegistry[name] = {
@@ -33,7 +33,7 @@
             if(event.ticksRemaining <= 0) {
                 var eventModule = require(event.module);
                 var parameters = event.parameters;
-                console.log("Executing event: "+eventName);
+                logger.logEvent("Executing event: "+eventName);
                 eval("eventModule."+event.event+"("+JSON.stringify(parameters)+")");
                 event.ticksRemaining = event.ticksTotal;
             }

@@ -1,6 +1,5 @@
 module.exports = function(creep){
-    var roleBase = require('role_base');
-    var states = [
+    creep.states = [
         {// 0
             description:"Stuck", 
             action: stuck
@@ -10,9 +9,8 @@ module.exports = function(creep){
             action: collectEnergy      
         }
     ];
+    creep.performStates();
 
-    roleBase.performStates(creep, states);
-    
     function collectEnergy(creep){
         var source = Game.getObjectById(creep.memory.targetNode);
         if(!source){

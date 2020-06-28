@@ -56,7 +56,7 @@ module.exports = (function(){
         var groups = Memory.rooms[room.name].harvestGroups;
         groups = utils.sortByPriority(groups);
         for(var i in groups){
-            harvestGroup(groups[i].name);
+            harvestGroup(groups[i].name).perform();
         }
     }
 

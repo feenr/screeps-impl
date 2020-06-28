@@ -2,6 +2,8 @@
 module.exports = (function(){
     var utils = require('utils_misc');
     var logFactory = require('utils_logger-factory');
+    var roomCost;
+
     var storeRoads = function(roomName){
         var room;
         if(roomName != "" && roomName != null){
@@ -16,6 +18,9 @@ module.exports = (function(){
     };
 
     var storeRoadsForRoom = function(room){
+        let viz = room.visual;
+        let terrain = new Room.Terrain(room.name);
+
         var roadLocations = [];
         roomId = room.name;
         var roads = room.find(FIND_STRUCTURES, {filter:utils.isARoad});
@@ -31,10 +36,18 @@ module.exports = (function(){
             roadLocations.push(roadLocation);
         }
 
-        Memory.rooms = Memory.rooms || {};
-        Memory.rooms[roomId] = Memory.rooms[roomId] || {};
-        Memory.rooms[roomId].roadPositions = roadLocations;
+        // Add each point from the N/E/S/W direction paths
+        let paths = getExitPaths(room);
+        for(let i in paths){
+            for(let x in paths[i]){
+                let pos = paths[i][x];
+                roadLocations.push({x: pos.x, y: pos.y});
+            }
+        }
+
+        room.setSetting("roadLocations", roadLocations);
     };
+
 
     var constructRoads = function(){
         var log = logFactory.getRoomLogger(i).log;
@@ -79,9 +92,127 @@ module.exports = (function(){
         }
     }
 
+    /**
+     * Not the actual center, but where all roads should meet.
+     */
+    function getRoomCenter(room) {
+        let spawns = room.find(FIND_MY_SPAWNS);
+        if(spawns[0]){
+            return spawns[0].pos;
+        } else {
+            return new RoomPosition(24,24, room.name)
+        }
+    }
+
+    /**
+     * TODO this should consider roads that have been queued but not yet built
+     * @returns {PathFinder.CostMatrix}
+     */
+    function getRoomCostMatrix(roomName){
+        if(roomCost){
+            return roomCost;
+        }
+        let room = Game.rooms[roomName];
+        let terrain = new Room.Terrain(room.name);
+        let costs = new PathFinder.CostMatrix;
+
+        for (let x = 0; x < 50; ++x) {
+            for (let y = 0; y < 50; ++y) {
+                let posTerrain = terrain.get(x, y);
+                if(posTerrain === TERRAIN_MASK_WALL){
+                    costs.set(x, y, 255);
+                } else if (posTerrain === TERRAIN_MASK_SWAMP){
+                    costs.set(x, y, 4);
+                } else {
+                    costs.set(x, y, 2);
+                }
+            }
+        }
+
+        room.find(FIND_STRUCTURES).forEach(function(struct) {
+            if (struct.structureType === STRUCTURE_ROAD) {
+                // Favor roads over plain tiles
+                costs.set(struct.pos.x, struct.pos.y, 1);
+            } else if (struct.structureType !== STRUCTURE_CONTAINER &&
+                (struct.structureType !== STRUCTURE_RAMPART ||
+                    !struct.my)) {
+                // Can't walk through non-walkable buildings
+                costs.set(struct.pos.x, struct.pos.y, 0xff);
+            }
+        });
+        roomCost = costs;
+        return roomCost;
+    }
+
+    function getExitPaths(room){
+        const terrain = new Room.Terrain(room.name);
+        const center = getRoomCenter(room);
+        const outPaths = {};
+        const sides = [
+            {
+                direction: "north",
+                getX: (index) => index,
+                getY: () => 0,
+            },
+            {
+                direction: "east",
+                getX: () => 49,
+                getY: (index) => index,
+            },
+            {
+                direction: "south",
+                getX: (index) => index,
+                getY: () => 49,
+            },
+            {
+                direction: "west",
+                getX: () => 0,
+                getY: (index) => index,
+            }
+        ]
+        for(let side in sides){
+            let exitExists = false;
+            let bestPath = null;
+            let bestCost = 100000;
+            for(let index = 0; index<50; index++) {
+                let x = sides[side].getX(index);
+                let y = sides[side].getY(index)
+                let terrainType = terrain.get(x, y);
+                if (terrainType !== TERRAIN_MASK_WALL) {
+                    exitExists = true;
+                    let pathData = PathFinder.search(center, room.getPositionAt(x, y), {
+                        "maxRooms": 1,
+                        "roomCallback": getRoomCostMatrix
+                    });
+                    if (pathData.incomplete) {
+                        break;
+                    }
+                    if (pathData.cost < bestCost) {
+                        bestPath = pathData.path;
+                        bestCost = pathData.cost;
+                    }
+                }
+            }
+            if(bestPath){
+                outPaths[sides[side].direction] = bestPath;
+            }
+        }
+        return outPaths;
+    }
+
+    function cleanUpRoadLocations(roomName){
+        let room = Game.rooms[roomName];
+        let roadLocations = room.getSetting("roadLocations");
+        for(let i in roadLocations){
+            room.lookAt
+        }
+        room.getSetting("roadLocations", roadLocations);
+    }
+
     var publicAPI = {};
     publicAPI.storeRoads = storeRoads;
     publicAPI.constructRoads = constructRoads;
     publicAPI.initializeRoads = initializeRoads;
+    publicAPI.visualizeRoadLocations = visualizeRoadLocations;
     return publicAPI;
 })();

@@ -20,7 +20,8 @@ var scripts = {
     creepSettings: require('settings_creeps'),
     structureDefinitions: require('structure_definitions'),
     eventDefinitions: require("event_definitions"),
-    eventsScheduler: require('event_scheduler')
+    eventsScheduler: require('event_scheduler'),
+    viz: require('utils_visuals')
 };
 
 module.exports.loop = function () {
@@ -46,6 +47,7 @@ module.exports.loop = function () {
     for(var roomName in Memory.rooms){
         try {
             scripts.room.perform(roomName);
+            scripts.viz.visualizeRoadLocations(roomName);
         } catch (e) {
             logger.logError("Exception processing room "+roomName+"\n"+e.stack);
         }
@@ -88,6 +90,7 @@ module.exports.loop = function () {
             }
         }
     }
+
 
     // Post tick stats for grafana
     scripts.stats.exportStats();
