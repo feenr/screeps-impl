@@ -32,6 +32,8 @@ Notes on gameplay
 - Setting an **Explore** flag in a room will cause an explore unit to spawn and navigate to that room
 - Adding a flag named **Parent-[child-room-name]** will set a parent-child relationship between two rooms
 
+Typical room
+![image](https://user-images.githubusercontent.com/83574/85935277-f4e17480-b8bc-11ea-9011-c79dde6e4edb.png)
 
 
 ## Grafana Dashboard
