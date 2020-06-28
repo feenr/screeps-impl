@@ -37,7 +37,7 @@ module.exports.loop = function () {
                 // Initialization is expensive. End this tick early.
                 return;
             } catch (e) {
-                logger.logError("Exception processing room "+roomName+"\n"+e);
+                logger.logError("Exception processing room "+roomName+"\n"+e+" "+e.stack);
             }
         }
     }
@@ -49,7 +49,7 @@ module.exports.loop = function () {
             scripts.viz.visualizeRoadLocations(roomName);
             //scripts.viz.visualizeDistanceTransform(roomName);
         } catch (e) {
-            logger.logError("Exception processing room "+roomName+"\n"+e.stack);
+            logger.logError("Exception processing room "+roomName+"\n"+e+" "+e.stack);
         }
     }
 
@@ -59,7 +59,7 @@ module.exports.loop = function () {
             var template = scripts.creepSettings[Memory.creeps[creepId].role];
             template.action(Game.creeps[creepId]);
         } catch(e) {
-            logger.logError("Exception processing creep: "+Game.creeps[creepId].room.name +" "+Game.creeps[creepId].name+"\n"+e)
+            logger.logError("Exception processing creep: "+Game.creeps[creepId].room.name +" "+Game.creeps[creepId].name+"\n"+e+" "+e.stack)
         }
     }
 

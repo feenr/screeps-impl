@@ -2,7 +2,6 @@
 module.exports = (function(){
     var utils = require('utils_misc');
     var logFactory = require('utils_logger-factory');
-    var roomCost;
 
     var storeRoads = function(roomName){
         var room;
@@ -17,34 +16,38 @@ module.exports = (function(){
 
     };
 
-    var storeRoadsForRoom = function(room){
-        let viz = room.visual;
-        let terrain = new Room.Terrain(room.name);
-
+    var storeRoadsForRoom = function(room) {
         var roadLocations = [];
-        roomId = room.name;
-        var roads = room.find(FIND_STRUCTURES, {filter:utils.isARoad});
-        for(var i in roads){
-            road = roads[i];
-            roadLocation = {x: road.pos.x, y:road.pos.y}
+        var roads = room.find(FIND_STRUCTURES, {filter: utils.isARoad});
+        for (var i in roads) {
+            let road = roads[i];
+            roadLocation = {x: road.pos.x, y: road.pos.y}
             roadLocations.push(roadLocation);
         }
-        var roadSites = room.find(FIND_CONSTRUCTION_SITES, {filter:utils.isARoad});
-        for(var i in roadSites){
+        var roadSites = room.find(FIND_CONSTRUCTION_SITES, {filter: utils.isARoad});
+        for (var i in roadSites) {
             var roadSite = roadSites[i];
-            var roadLocation = {x: roadSite.pos.x, y:roadSite.pos.y}
+            var roadLocation = {x: roadSite.pos.x, y: roadSite.pos.y}
             roadLocations.push(roadLocation);
         }
+    }
 
-        // Add each point from the N/E/S/W direction paths
+    // I think this is pretty good. It would be nice if roads were shared a bit better while planning.
+    var planRoadsForRoom = function(room){
+        let roadLocations = [];
         let paths = getExitPaths(room);
+        paths = paths.concat(getNodePaths(room));
+
         for(let i in paths){
+            console.log(i+" "+ JSON.stringify(paths[i]));
             for(let x in paths[i]){
                 let pos = paths[i][x];
+                if(pos.x === 0 || pos.x === 49 || pos.y === 0 || pos.y === 49){
+                    continue
+                }
                 roadLocations.push({x: pos.x, y: pos.y});
             }
         }
-
         room.setSetting("roadLocations", roadLocations);
     };
 
@@ -53,10 +56,13 @@ module.exports = (function(){
         var log = logFactory.getRoomLogger(i).log;
         Memory.rooms = Memory.rooms || {};
         for(var i in Memory.rooms){
+            // This removes any roads which have already been built from the queue
             var room = Game.rooms[i];
             if(!room){
                 return;
             }
+            cleanUpRoadLocations(room.name);
+
             var roadPositions = room.getSetting("roadLocations");
             // Roads not defined.
             if(!roadPositions){
@@ -105,9 +111,6 @@ module.exports = (function(){
                 room.createConstructionSite(x, y, STRUCTURE_ROAD);
             }
         }
-
-        // This removes any roads which have already been built from the queue
-        cleanUpRoadLocations(roomName);
     }
 
     /**
@@ -127,9 +130,7 @@ module.exports = (function(){
      * @returns {PathFinder.CostMatrix}
      */
     function getRoomCostMatrix(roomName){
-        if(roomCost){
-            return roomCost;
-        }
+        debugger;
         let room = Game.rooms[roomName];
         let terrain = new Room.Terrain(room.name);
         let costs = new PathFinder.CostMatrix;
@@ -158,14 +159,13 @@ module.exports = (function(){
                 costs.set(struct.pos.x, struct.pos.y, 0xff);
             }
         });
-        roomCost = costs;
-        return roomCost;
+        return costs;
     }
 
-    function getExitPaths(room){
+    function getExitPaths(room, plannedRoads){
         const terrain = new Room.Terrain(room.name);
         const center = getRoomCenter(room);
-        const outPaths = {};
+        const outPaths = [];
         const sides = [
             {
                 direction: "north",
@@ -212,28 +212,49 @@ module.exports = (function(){
                 }
             }
             if(bestPath){
-                outPaths[sides[side].direction] = bestPath;
+                // outPaths[sides[side].direction] = bestPath;
+                outPaths.push(bestPath)
             }
         }
         return outPaths;
     }
 
+    function getNodePaths(room){
+        let paths = [];
+        let center = getRoomCenter(room);
+        let targets = room.getSources();
+        targets.push(room.controller);
+
+        for(let i in targets){
+            let pathData = PathFinder.search(center, {pos: targets[i].pos, range: 1}, {
+                "maxRooms": 1,
+                "roomCallback": getRoomCostMatrix
+            });
+            if (pathData.incomplete) {
+                continue;
+            }
+            paths.push(pathData.path);
+        }
+        return paths;
+    }
+
     function cleanUpRoadLocations(roomName){
         let room = Game.rooms[roomName];
         let roadLocations = room.getSetting("roadLocations");
-        console.log(JSON.stringify(roadLocations));
+        let newRoadLocations = [];
         for(let i in roadLocations){
             let structures = room.lookForAt(LOOK_STRUCTURES, roadLocations[i].x, roadLocations[i].y);
             let roads = structures.filter((structure) => structure.structureType ===STRUCTURE_ROAD);
-            if(roads.length > 0){
-                roadLocations.splice(i, 1);
+            if(roads.length === 0){
+                newRoadLocations.push(roadLocations[i]);
             }
         }
-        room.setSetting("roadLocations", roadLocations);
+        room.setSetting("roadLocations", newRoadLocations);
     }
 
     var publicAPI = {};
     publicAPI.storeRoads = storeRoads;
+    publicAPI.planRoadsForRoom = planRoadsForRoom;
     publicAPI.constructRoads = constructRoads;
     publicAPI.initializeRoads = initializeRoads;
     publicAPI.cleanUpRoadLocations = cleanUpRoadLocations;

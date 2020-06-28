@@ -91,19 +91,13 @@ module.exports = (function(){
         if(!Game.rooms[roomName]){
             return;
         }
-        let dt = Game.rooms[roomName].getSetting("distanceTransform");
-        if(!dt){
-            dt = distanceTransform().serialize();
-            Game.rooms[roomName].setSetting("distanceTransform", dt);
-        }
-        dt = PathFinder.CostMatrix.deserialize(dt)
+        let dt = Game.rooms[roomName].getDistanceTransform();
         for (let x = 0; x < 50; ++x) {
             for (let y = 0; y < 50; ++y) {
-                // viz.text(costs.get(x, y), x, y, { font: 0.5 });
+                // Game.rooms[roomName].visual.text(dt.get(x, y), x, y, { font: 0.5 });
                 Game.rooms[roomName].visual.circle(x, y, {radius:dt.get(x, y)/75});
             }
         }
-
     }
 
     return {

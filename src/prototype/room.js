@@ -98,6 +98,64 @@ module.exports = (function() {
         }
     };
 
+    Room.prototype.determineFirstSpawnLocation = function(){
+        // First average the locations of all sources and the controller
+        let positions = [];
+        let sources = this.find(FIND_SOURCES);
+        for(let i in sources){
+            positions.push(sources[i].pos)
+        }
+        positions.push(this.controller.pos);
+        let sumx = 0;
+        let sumy = 0;
+        for(let i in positions){
+            sumx+= positions[i].x;
+            sumy+= positions[i].y;
+        }
+        let idealx = Math.floor(sumx / positions.length);
+        let idealy = Math.floor(sumy / positions.length);
+        let idealLocation = {x: idealx, y: idealy}
+
+        // Scan outward to find the spot with the highest distance from walls. Return immediately
+        // if a location has 3 or greater.
+        let highestDistance = -1;
+        let highestDistanceLoc;
+        let dt = distanceTransform(this.name);
+        for(let iter = 0; iter <= 2; iter++){
+            let x1, x2, y1, y2;
+            switch(iter){
+                case 0:
+                    x1 = x2 = y1 = y2 = 0;
+                    break;
+                case 1:
+                    x1 = y1 = -1;
+                    y2 = y2 = 1;
+                    break;
+                case 2:
+                    x1 = y1 = -2;
+                    x2 = y2 = 2;
+                    break;
+            }
+
+            for(let x = x1; x <= x2; x++){
+                for(let y = y1; y<= y2; y++){
+                    let loc = {x: idealLocation.x+x, y: idealLocation.y+y};
+                    let distance = dt.get(idealLocation.x +x, idealLocation.y+y);
+                    if(distance >=3){
+                        return loc;
+                    } else {
+                        if(distance > highestDistance){
+                            highestDistance = distance;
+                            highestDistanceLoc = loc
+                        }
+                    }
+                }
+            }
+        }
+        return highestDistanceLoc;
+    }
+
+
     Room.prototype.initialize = function(){
         var room = this;
         var log = this.getLogger();
@@ -126,24 +184,6 @@ module.exports = (function() {
             initializeFlags();
         }
 
-        function determineFirstSpawnLocation(){
-            let positions = [];
-            let sources = this.find(FIND_SOURCES);
-            for(let i in sources){
-                positions.push(sources[i].pos)
-            }
-            positions.push(this.controller.pos);
-            let sumx = 0;
-            let sumy = 0;
-            for(let i in positions){
-                sumx+= positions[i].x;
-                sumy+= positions[i].y;
-            }
-            idealx = Math.floor(sumx / positions.length);
-            idealy = Math.floor(sumy / positions.length);
-            let idealLocation = {x: idealx, y: idealy}
-            // TODO Next find a spot that is in an open area.
-        }
 
         function initializeFlags(){
             var flagSettings = require('settings_flags');
@@ -450,6 +490,18 @@ module.exports = (function() {
         return queueManager.getQueue(this, 'requestSpawns');
     };
 
+    Room.prototype.getDistanceTransform = function(){
+        let dt = this.getSetting("distanceTransform");
+        if(dt){
+            dt = PathFinder.CostMatrix.deserialize(dt)
+            return dt;
+        } else {
+            dt = distanceTransform(this.name);
+            this.setSetting("distanceTransform", dt.serialize());
+            return dt;
+        }
+    }
+
     /** Static functions **/
     Room.updateNeutralSettings = function(roomName){
         let parentFlag = Game.flags["Parent-"+roomName];
@@ -459,6 +511,38 @@ module.exports = (function() {
             settings.set("ParentRoom", "", roomName);
         }
     };
+
+    /** Private functions **/
+    function distanceTransform(roomName) {
+        let terrain = Game.rooms[roomName].getTerrain()
+        let topDownPass = new PathFinder.CostMatrix();
+        for (let y = 0; y < 50; ++y) {
+            for (let x = 0; x < 50; ++x) {
+                if (terrain.get(x, y) === TERRAIN_MASK_WALL) {
+                    topDownPass.set(x, y, 0);
+                }
+                else {
+                    topDownPass.set(x, y,
+                            Math.min(topDownPass.get(x-1, y-1),
+                                topDownPass.get(x, y-1),
+                                topDownPass.get(x+1, y-1),
+                                topDownPass.get(x-1, y)) + 1);
+                }
+            }
+        }
+
+        for (let y = 49; y >= 0; --y) {
+            for (let x = 49; x >= 0; --x) {
+                let value = Math.min(topDownPass.get(x, y),
+                    topDownPass.get(x+1, y+1) + 1,
+                    topDownPass.get(x, y+1) + 1,
+                    topDownPass.get(x-1, y+1) + 1,
+                    topDownPass.get(x+1, y) + 1);
+                topDownPass.set(x, y, value);
+            }
+        }
+        return topDownPass;
+    }
 
     /**
      * Fogged room is a room inside fog of war. It can access a subset of room functions.
