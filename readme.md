@@ -23,8 +23,8 @@ grunt
 ```
 
 ### Notes on gameplay
-- Entering a room for the first time will initialize flags
-    - A **disabled-[room-name]** flag which when deleted will cause the room to be run room processing each tick.
+- Entering a room for the first time will initialize flags which give a small amount of control over the AI
+    - A **disabled-[room-name]** flag which when deleted will cause the room to be processed each tick.
     - A set of **[structure-type]-[room-name]** flags in default locations where construction sites will automatically be generated. 
     They can be moved around manually to customize the room.
     - A set of **[unit-type]-[room-name]** flags which changing the color will change the number of units spawned in that room.
