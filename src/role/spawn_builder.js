@@ -1,34 +1,32 @@
 module.exports = function(creep){
-    var roleBase = require('role_base');
-
-    var states = [
+    creep.states = [
         {// 0
             description:"Stuck",
             action: stuck
         },
         {// 1
+            description:"Move to flag",
+            action: moveToFlag
+        },
+        {// 2
             description:"Collecting Energy",
             action: collectEnergy
         },
-        {// 2
+        {// 3
             description:"Constructing",
             action: constructing
-        },
-        {// 3
-            description:"Move to flag",
-            action: moveToFlag
         }
     ];
 
-    roleBase.performStates(creep,states);
+    creep.performStates();
 
     function collectEnergy(creep){
         if(Game.flags["Claim"] && Game.flags["Claim"].room != creep.room){
-            creep.moveToAndWait(Game.flags["Claim"]);
+            creep.memory.state = 1;
             return;
         }
         if(creep.carry.energy == creep.carryCapacity){
-            creep.memory.state = 2;
+            creep.memory.state = 3;
             return;
         }
 
@@ -44,14 +42,10 @@ module.exports = function(creep){
         }
 
 
-        var sources = creep.room.getSources();
-        for(var i in sources){
-            if(sources[i] && sources[i].energy > 0){
-                creep.moveToAndHarvest(sources[i]);
-                return;
-            }
-        }
-
+        let sources = creep.room.getSources();
+        // sources = _.filter(sources, (source)=> source.energy > 0);
+        let soure = creep.pos.findClosestByRange(sources);
+        creep.moveToAndHarvest(sources[1]);
 
         /**
          var resource = Game.getObjectById("55c34a6b5be41a0a6e80c340");
@@ -71,12 +65,13 @@ module.exports = function(creep){
     }
 
     function constructing(){
+
         //if(Game.flags["Claim"] && Game.flags["Claim"].room != creep.room){
         //    creep.memory.state = 3;
         //    return;
         //    }
         if(creep.carry.energy == 0 ){
-            creep.memory.state = 0;
+            creep.memory.state = 2;
             return;
         }
         //var tower = creep.room.find(FIND_STRUCTURES, {filter: utils.isA("tower")})[0];
@@ -89,7 +84,12 @@ module.exports = function(creep){
         //console.log("hi")
 
         var constructionSites = creep.room.getMyConstructionSites();
-        creep.moveToAndBuild(constructionSites[0]);
+        if(constructionSites.length > 0){
+            creep.moveToAndBuild(constructionSites[0]);
+        } else {
+            console.log("Spawn builder has nothing to do")
+        }
+
 
         //var newSpawn = Game.getObjectById("57740c41efd3405c4bb33fa7");
         //creep.moveToAndBuild(newSpawn);
@@ -115,13 +115,15 @@ module.exports = function(creep){
         }**/
     }
 
+
+
     function moveToFlag(){
-        creep.memory.state = 0;
+        if(Game.flags["Claim"].room === creep.room){
+            creep.memory.state = 2;
+            return;
+        }
         if(Game.flags["Claim"] && !creep.pos.isNearTo(Game.flags["Claim"])){
             creep.moveToAndWait(Game.flags["Claim"]);
-            return;
-        } else {
-            creep.memory.state = 1;
         }
     }
 };

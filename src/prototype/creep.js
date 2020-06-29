@@ -168,6 +168,14 @@ module.exports = (function(){
             }
         };
 
+        Creep.prototype.moveToAndClaim = function(controller){
+            if(!this.pos.isNearTo(controller)){
+                this.moveTo(controller, {"visualizePathStyle":{}});
+            } else {
+                this.claimController(controller);
+            }
+        };
+
         Creep.prototype.moveToAndTransferEnergy = function(transferTarget){
             if(!this.pos.isNearTo(transferTarget)){
                 this.moveTo(transferTarget);

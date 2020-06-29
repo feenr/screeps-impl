@@ -3,7 +3,7 @@ const build = require('role_builder');
 const soldier = require('role_soldier');
 const research = require('role_researcher');
 const deliver = require('role_messenger');
-const colonize = require('role_colonizer');
+const claim = require('role_claimer');
 const explore = require('role_explorer');
 const spawner = require('role_spawn_builder');
 const healer = require('role_healer');
@@ -51,10 +51,10 @@ module.exports = {
         color: 'red'
     },
     
-    colonizer: {
-        role: 'colonizer',
+    claimer: {
+        role: 'claimer',
         skills: [CLAIM, MOVE, MOVE],
-        action: colonize,
+        action: claim,
         cappedSize: true
     },
     

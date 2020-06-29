@@ -98,6 +98,10 @@ module.exports = (function() {
         }
     };
 
+    Room.prototype.createSpawnConstructionSite = function(){
+
+    }
+
     Room.prototype.determineFirstSpawnLocation = function(){
         // First average the locations of all sources and the controller
         let positions = [];
@@ -280,12 +284,12 @@ module.exports = (function() {
             targetCreepCounts.builder = this.getSettingFromFlag("Builders");
             targetCreepCounts.messenger = this.getSettingFromFlag("Messengers");
             targetCreepCounts.deconstructor = 0;
-            targetCreepCounts.colonizer = 0;
+            targetCreepCounts.claimer = 0;
             targetCreepCounts.soldier = 0;
             targetCreepCounts.healer = targetCreepCounts.soldier - 2;
             targetCreepCounts.rangedSoldier = 0;
             targetCreepCounts.soldier = 0;
-            targetCreepCounts.spawner = 0;
+            targetCreepCounts.spawner = 1;
             targetCreepCounts.miner = 0;
         }
 
@@ -382,7 +386,10 @@ module.exports = (function() {
     };
 
     Room.prototype.createSpawn = function() {
-        createStructure("Spawn-", STRUCTURE_SPAWN);
+        // if(this.getMySpawns().length === 0){
+            let pos = this.determineFirstSpawnLocation();
+            this.createConstructionSite(pos, STRUCTURE_SPAWN);
+        // }
     };
 
     Room.prototype.createTower = function(){
