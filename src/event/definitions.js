@@ -1,6 +1,6 @@
 module.exports = [
         {
-            name : "DistributeLinkEnery", 
+            name : "distributeLinkEnergy",
             module : "event_structure_link",
             functionName : "distributeEnergy", 
             parameters : {}, 

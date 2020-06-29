@@ -15,7 +15,7 @@ module.exports = (function(){
             objectType = 'spawn'
         } else if (gameObject instanceof Creep){
             objectType = 'creep'
-        } else if (gameObject == Game) {
+        } else if (gameObject === Game) {
             objectType = 'game';
             id = 'global';
         } else {

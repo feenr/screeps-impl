@@ -119,6 +119,7 @@ module.exports = function(creep){
 
     function moveToFlag(){
         if(Game.flags["Claim"].room === creep.room){
+            creep.moveToAndWait(Game.flags["Claim"]);
             creep.memory.state = 2;
             return;
         }
