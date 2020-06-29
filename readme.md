@@ -36,6 +36,8 @@ grunt
 ### Typical room
 ![image](https://user-images.githubusercontent.com/83574/85935277-f4e17480-b8bc-11ea-9011-c79dde6e4edb.png)
 
+## Typical log
+![image](https://user-images.githubusercontent.com/83574/85970362-47dc2a00-b998-11ea-9415-2a67b5938083.png)
 
 ## Grafana Dashboard
 Set up grafana per specifications on this project.
