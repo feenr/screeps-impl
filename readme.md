@@ -44,4 +44,4 @@ Set up grafana per specifications on this project.
 https://github.com/screepers/screeps-grafana
 
 The dashboard backed up here looks like this.
-![image](https://user-images.githubusercontent.com/83574/85636670-1e956400-b64f-11ea-931d-33fda47da8d7.png)
+![ScreepsDashboard](https://user-images.githubusercontent.com/83574/86077078-51799680-ba59-11ea-8641-58bdacad4f1e.png)
