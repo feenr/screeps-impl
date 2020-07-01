@@ -280,15 +280,14 @@ module.exports = (function() {
             }
             targetCreepCounts.researcher = this.getSettingFromFlag("Researchers");
             targetCreepCounts.harvester = this.getHarvestorCount();
-            targetCreepCounts.explorer = this.getSettingFromFlag("Messengers");
+            targetCreepCounts.explorer = this.getSettingFromFlag("Explorers");
             targetCreepCounts.builder = this.getSettingFromFlag("Builders");
             targetCreepCounts.messenger = this.getSettingFromFlag("Messengers");
-            targetCreepCounts.deconstructor = 0;
+            targetCreepCounts.deconstructor = this.getSettingFromFlag("Deconstructors");
             targetCreepCounts.claimer = this.getSettingFromFlag("Claimers");
-            targetCreepCounts.soldier = 0;
+            targetCreepCounts.soldier = this.getSettingFromFlag("Soldiers");
             targetCreepCounts.healer = targetCreepCounts.soldier - 2;
-            targetCreepCounts.rangedSoldier = 0;
-            targetCreepCounts.soldier = 0;
+            targetCreepCounts.rangedSoldier = this.getSettingFromFlag("RangedSoldiers");
             targetCreepCounts.spawner = this.getSettingFromFlag("Spawners");
             targetCreepCounts.miner = 0;
         }
