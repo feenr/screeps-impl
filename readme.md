@@ -37,11 +37,11 @@ grunt
 ![image](https://user-images.githubusercontent.com/83574/85935277-f4e17480-b8bc-11ea-9011-c79dde6e4edb.png)
 
 ## Typical log
-![image](https://user-images.githubusercontent.com/83574/85970362-47dc2a00-b998-11ea-9415-2a67b5938083.png)
+![image](https://user-images.githubusercontent.com/83574/86196050-56554d80-bb20-11ea-91fe-9c0af0626a76.png)
 
 ## Grafana Dashboard
 Set up grafana per specifications on this project.
 https://github.com/screepers/screeps-grafana
 
 The dashboard backed up here looks like this.
-![image](https://user-images.githubusercontent.com/83574/85636670-1e956400-b64f-11ea-931d-33fda47da8d7.png)
+![ScreepsDashboard](https://user-images.githubusercontent.com/83574/86077078-51799680-ba59-11ea-8641-58bdacad4f1e.png)
