@@ -87,7 +87,7 @@ module.exports = function(creep){
         if(constructionSites.length > 0){
             creep.moveToAndBuild(constructionSites[0]);
         } else {
-            console.log("Spawn builder has nothing to do")
+            // console.log("Spawn builder has nothing to do")
         }
 
 

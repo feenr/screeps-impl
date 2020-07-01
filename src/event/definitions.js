@@ -29,7 +29,7 @@ module.exports = [
             functionName : "upgradeWalls",
             parameters : {},
             interval : 50,
-            disabled : true
+            disabled : false
         },
         {
           name : "spawnCreeps",

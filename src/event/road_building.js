@@ -39,7 +39,6 @@ module.exports = (function(){
         paths = paths.concat(getNodePaths(room));
 
         for(let i in paths){
-            console.log(i+" "+ JSON.stringify(paths[i]));
             for(let x in paths[i]){
                 let pos = paths[i][x];
                 if(pos.x === 0 || pos.x === 49 || pos.y === 0 || pos.y === 49){
@@ -53,24 +52,30 @@ module.exports = (function(){
 
 
     var constructRoads = function(){
-        var log = logFactory.getRoomLogger(i).log;
-        Memory.rooms = Memory.rooms || {};
+        if(!Memory.rooms){
+            return;
+        }
         for(var i in Memory.rooms){
-            // This removes any roads which have already been built from the queue
             var room = Game.rooms[i];
             if(!room){
-                return;
+                continue;
             }
+            let log = room.getLogger();
+            // This removes any roads which have already been built from the queue
+            planRoadsForRoom(room);
             cleanUpRoadLocations(room.name);
 
             var roadPositions = room.getSetting("roadLocations");
             // Roads not defined.
-            if(!roadPositions){
-                return;
+            if(!roadPositions || roadPositions.length === 0){
+                log("No roads queued");
+                continue;
             }
             // Don't add new construction sites if there are already 5 or more
+            log("Road segments remaining: "+roadPositions.length);
             if(room.find(FIND_CONSTRUCTION_SITES).length >= 5){
-                return;
+                log("Construction in progress");
+                continue;
             }
             let queuedCount = 0;
             for(var k = 0; k < roadPositions.length; k++){
@@ -78,12 +83,12 @@ module.exports = (function(){
                 let result = room.createConstructionSite(roadPosition.x, roadPosition.y, STRUCTURE_ROAD);
                 if(result === OK){
                     // Only add 5 new construction sites at a time.
-                    if(++queuedCount>5){
+                    if(++queuedCount>=5){
                         break;
                     }
                 }
             }
-            console.log("Created "+queuedCount+ " road construction sites.");
+            log("Created "+queuedCount+ " road construction sites.");
         }
     };
 
@@ -121,6 +126,12 @@ module.exports = (function(){
         if(spawns[0]){
             return spawns[0].pos;
         } else {
+            let sites = room.getMyConstructionSites();
+            for(var i in sites){
+                if(sites[i].structureType === STRUCTURE_SPAWN){
+                    return sites[i].pos;
+                }
+            }
             return new RoomPosition(24,24, room.name)
         }
     }

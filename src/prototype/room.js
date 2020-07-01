@@ -228,11 +228,11 @@ module.exports = (function() {
         let harvestGroups = [];
         for(let i = 0; i < sources.length; i++){
             // harvestGroups.push(new HarvestGroup(sources[i].id));
-            new HarvestGroup(sources[i].id);
+            new HarvestGroup(sources[i].id).initialize();
         }
         for(let i = 0; i < minerals.length; i++){
             // harvestGroups.push(new HarvestGroup(minerals[i].id));
-            new HarvestGroup(minerals[i].id);
+            new HarvestGroup(minerals[i].id).initialize();
         }
         return harvestGroups;
     };
@@ -280,16 +280,16 @@ module.exports = (function() {
             }
             targetCreepCounts.researcher = this.getSettingFromFlag("Researchers");
             targetCreepCounts.harvester = this.getHarvestorCount();
-            targetCreepCounts.explorer = 1;
+            targetCreepCounts.explorer = this.getSettingFromFlag("Messengers");
             targetCreepCounts.builder = this.getSettingFromFlag("Builders");
             targetCreepCounts.messenger = this.getSettingFromFlag("Messengers");
             targetCreepCounts.deconstructor = 0;
-            targetCreepCounts.claimer = 0;
+            targetCreepCounts.claimer = this.getSettingFromFlag("Claimers");
             targetCreepCounts.soldier = 0;
             targetCreepCounts.healer = targetCreepCounts.soldier - 2;
             targetCreepCounts.rangedSoldier = 0;
             targetCreepCounts.soldier = 0;
-            targetCreepCounts.spawner = 1;
+            targetCreepCounts.spawner = this.getSettingFromFlag("Spawners");
             targetCreepCounts.miner = 0;
         }
 
@@ -519,9 +519,15 @@ module.exports = (function() {
         }
     };
 
+    Room.prototype.isDisabled = function(){
+        return this.getSetting("disabled");
+    };
+
+
+
     /** Private functions **/
     function distanceTransform(roomName) {
-        let terrain = Game.rooms[roomName].getTerrain()
+        let terrain = Game.rooms[roomName].getTerrain();
         let topDownPass = new PathFinder.CostMatrix();
         for (let y = 0; y < 50; ++y) {
             for (let x = 0; x < 50; ++x) {
