@@ -9,21 +9,42 @@ module.exports = function(nodeId){
     var roomId = room.name;
 
     //Stored in memory
-    var targetEnergyStore;
-    var targetHarvesterCount;
-    var targetMinerCount;
-    var harvesterList;
-    var minerList;
+    let targetEnergyStore;
+    let targetHarvesterCount;
+    let targetMinerCount;
+    let harvesterList;
+    let minerList;
 
-    // perform();
+    let workers = [
+        {
+            type: "harvester",
+            target: 0,
+            list: []
+        },
+        {
+            type: "miner",
+            target: 0,
+            list: []
+        },
+        {
+            type: "drill",
+            target: 0,
+            list: []
+        }
+    ]
 
     function perform(){
         getFromMemory();
 
         // Remove all dead harvesters
-        for(var i in harvesterList){
+        for(let i in harvesterList){
             if(!Game.getObjectById(harvesterList[i])){
                 harvesterList.splice(i, 1);
+            }
+        }
+        for(let i in minerList){
+            if(!Game.getObjectById(harvesterList[i])){
+                minerList.splice(i, 1);
             }
         }
 
@@ -40,16 +61,16 @@ module.exports = function(nodeId){
         // If we don't have enough harvesters on this node, find
         // an idle one and assign it.
         if(harvesterList.length < targetHarvesterCount){
-            var harvester = findUnassignedHarvester();
+            let harvester = findUnassignedWorker("harvester");
             if(harvester){
-                addHarvester(harvester);
+                addWorker(harvester);
             } else {
-                var parentRoomName = settings.get("ParentRoom", roomId);
+                let parentRoomName = settings.get("ParentRoom", roomId);
                 if(parentRoomName){
-                    var parentRoom = Game.rooms[parentRoomName];
+                    let parentRoom = Game.rooms[parentRoomName];
                     if(parentRoom){
-                        var queue = parentRoom.getSpawnQueue();
-                        var queueRequest = {role: "harvester", memory: {room: roomId}};
+                        let queue = parentRoom.getSpawnQueue();
+                        let queueRequest = {role: "harvester", memory: {room: roomId}};
 
                         if (queue.containsCount(queueRequest) < 1 && !parentRoom.hasInvaders()) {
                             log("Requesting a harvester");
@@ -59,33 +80,56 @@ module.exports = function(nodeId){
                 }
             }
         }
+
+        // If we don't have enough miners on this node, find
+        // an idle one and assign it.
+        if(minerList.length < targetMinerCount){
+            let miner = findUnassignedWorker("miner");
+            if(miner){
+                addWorker(miner);
+            } else {
+                let parentRoomName = settings.get("ParentRoom", roomId);
+                if(parentRoomName){
+                    let parentRoom = Game.rooms[parentRoomName];
+                    if(parentRoom){
+                        let queue = parentRoom.getSpawnQueue();
+                        let queueRequest = {role: "miner", memory: {room: roomId}};
+
+                        if (queue.containsCount(queueRequest) < 1 && !parentRoom.hasInvaders()) {
+                            log("Requesting a miner");
+                            queue.push(queueRequest);
+                        }
+                    }
+                }
+            }
+        }
     }
 
-    function findUnassignedHarvester(){
+    function findUnassignedWorker(type){
         for(var i in Game.creeps){
-            var harvester = Game.creeps[i];
-            if(harvester.memory.role != 'harvester'){
+            var worker = Game.creeps[i];
+            if(worker.memory.role !== type){
                 continue;
             }
             // cheap way of seeing if a room has spawns,
             // although not 100% accurate.
             if(room.controller.my){
                 // If this room has a spawn, only choose from creeps already in the room.
-                if(harvester.room != room){
+                if(worker.room !== room){
                     continue;
                 }
                 // Don't choose harvesters that belong to other rooms.
-                if(harvester.memory.room != room.name){
+                if(worker.memory.room !== room.name){
                     continue;
                 }
             } else {
-                if(harvester.memory.room != room.name){
+                if(worker.memory.room !== room.name){
                     continue;
                 }
             }
 
-            if(!harvester.memory.targetNode || harvester.memory.targetNode == ''){
-                return harvester;
+            if(!worker.memory.targetNode || worker.memory.targetNode === ''){
+                return worker;
             }
         }
     }
@@ -120,12 +164,15 @@ module.exports = function(nodeId){
         return null;
     }
     
-    function addHarvester(creep, index){
+    function addWorker(creep){
         Memory.creeps[creep.name].targetNode = id;
-        if(typeof(index) == 'undefined'){
-            index = harvesterList.length;
-        } 
-        harvesterList[index] = creep.id; 
+        if(creep.memory.role === "miner"){
+            let index = minerList.length;
+            minerList[index] = creep.id;
+        } else if (creep.memory.role === "harvester"){
+            let index = harvesterList.length;
+            harvesterList[index] = creep.id;
+        }
     }
     
     function getFromMemory(){
@@ -135,27 +182,23 @@ module.exports = function(nodeId){
         }
         Memory.rooms[roomId].harvestGroups[nodeId] = Memory.rooms[roomId].harvestGroups[nodeId] || {};
         Memory.rooms[roomId].harvestGroups[nodeId].harvesterList = Memory.rooms[roomId].harvestGroups[nodeId].harvesterList || [];
-        //Memory.rooms[roomId].harvestGroups[nodeId].targetHarvesterCount = Memory.rooms[roomId].harvestGroups[nodeId].targetHarvesterCount || 1;
+        Memory.rooms[roomId].harvestGroups[nodeId].minerList = Memory.rooms[roomId].harvestGroups[nodeId].minerList || [];
+
         harvesterList = Memory.rooms[roomId].harvestGroups[nodeId].harvesterList;
+        minerList = Memory.rooms[roomId].harvestGroups[nodeId].minerList;
         targetEnergyStore = Memory.rooms[roomId].harvestGroups[nodeId].targetEnergyStore;
-        targetHarvesterCount = Memory.rooms[roomId].harvestGroups[nodeId].targetHarvesterCount
+        targetHarvesterCount = Memory.rooms[roomId].harvestGroups[nodeId].targetHarvesterCount;
+        targetMinerCount = Memory.rooms[roomId].harvestGroups[nodeId].targetMinerCount;
     }
     
-    function debugTable(){
-        var node = Game.getObjectById(id);
-        for(var i in harvesterList){
-            var harvesterId = harvesterList[i];
-            var harvester = Game.getObjectById(harvesterId);
-            console.log(harvesterId + " : "+ harvester.name + "["+harvester.pos.x+", "+harvester.pos.y+"]");
-        }
-    }
 
     function initialize(){
         let harvestGroups = Memory.rooms[roomName].harvestGroups || (Memory.rooms[roomName].harvestGroups = {});
         console.log("Initializing"+nodeId);
         if(node instanceof Source){
             harvestGroup = {
-                targetHarvesterCount : node.pos.getOpenAdjacentPositionsCount()
+                targetHarvesterCount : node.pos.getOpenAdjacentPositionsCount(),
+                targetMinerCount : 0
             };
         } else if(node instanceof Mineral){
             var storages = room.find(FIND_MY_STRUCTURES, {filter: utils.isA("storage")});
@@ -164,6 +207,7 @@ module.exports = function(nodeId){
             }
              harvestGroup = {
                 targetHarvesterCount : 0,
+                targetMinerCount : 0,
                 targetEnergyStore : targetEnergyStore
             };
         }
@@ -173,7 +217,6 @@ module.exports = function(nodeId){
     
     var publicAPI = {};
     publicAPI.perform = perform;
-    publicAPI.debugTable = debugTable;
     publicAPI.initialize = initialize;
     return publicAPI;
 };

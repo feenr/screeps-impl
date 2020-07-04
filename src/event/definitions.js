@@ -8,6 +8,14 @@ module.exports = [
             disabled : true
         },
         {
+            name : "generatePixel",
+            module : "event_generate-pixel",
+            functionName : "generate",
+            parameters : {},
+            interval : 10,
+            disabled : false
+        },
+        {
             name : "constructRoads", 
             module : "event_road_building",
             functionName : "constructRoads", 
