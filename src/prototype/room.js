@@ -166,7 +166,7 @@ module.exports = (function() {
         log("Initializing room");
         Memory.rooms[room.name] = {};
         this.initializeHarvestGroups();
-        if(Game.rooms.length === 1){
+        if(Object.keys(Game.rooms).length === 1){
             settings.set("disabled", false, room.name);
         } else {
             settings.set("disabled", true, room.name);
@@ -279,7 +279,7 @@ module.exports = (function() {
                 return;
             }
             targetCreepCounts.researcher = this.getSettingFromFlag("Researchers");
-            targetCreepCounts.harvester = this.getHarvestorCount();
+            targetCreepCounts.harvester = this.getHarvestGroupWorkerCount("harvester");
             targetCreepCounts.explorer = this.getSettingFromFlag("Explorers");
             targetCreepCounts.builder = this.getSettingFromFlag("Builders");
             targetCreepCounts.messenger = this.getSettingFromFlag("Messengers");
@@ -289,7 +289,8 @@ module.exports = (function() {
             targetCreepCounts.healer = targetCreepCounts.soldier - 2;
             targetCreepCounts.rangedSoldier = this.getSettingFromFlag("RangedSoldiers");
             targetCreepCounts.spawner = this.getSettingFromFlag("Spawners");
-            targetCreepCounts.miner = 0;
+            targetCreepCounts.miner = this.getHarvestGroupWorkerCount("miner");
+            targetCreepCounts.driller = this.getHarvestGroupWorkerCount("driller");
         }
 
         Room.updateNeutralSettings(this.name);
@@ -304,11 +305,11 @@ module.exports = (function() {
         return this.controller && this.controller.my;
     };
 
-    Room.prototype.getHarvestorCount = function(){
+    Room.prototype.getHarvestGroupWorkerCount = function(type){
         let count = 0;
         let harvesterGroups = this.findChildHarvesterGroups();
         for(let i =0; i <  harvesterGroups.length; i++){
-            count += harvesterGroups[i].targetHarvesterCount;
+            count += harvesterGroups[i].workers[type].target;
         }
         return count;
     };
@@ -556,22 +557,24 @@ module.exports = (function() {
         return topDownPass;
     }
 
-    /**
-     * Fogged room is a room inside fog of war. It can access a subset of room functions.
-     * @param roomName
-     * @constructor
-     */
-    FoggedRoom = function(roomName){
-        this.name = roomName;
-        this.memory = Memory.rooms[roomName];
-    };
-    FoggedRoom.prototype.creepsByRole = {};
-    FoggedRoom.prototype.assignedCreepsByRole = {};
-    FoggedRoom.prototype.flagSettings = {};
-    FoggedRoom.prototype.getAssignedCreeps = Room.prototype.getAssignedCreeps;
-    FoggedRoom.prototype.getAssignedCreepsByRole = Room.prototype.getAssignedCreepsByRole;
-    FoggedRoom.prototype.getParentRoom = Room.prototype.getParentRoom;
-    FoggedRoom.prototype.getSetting = Room.prototype.getSetting;
-    FoggedRoom.prototype.setSetting = Room.prototype.setSetting;
+
 
 })();
+
+/**
+ * Fogged room is a room inside fog of war. It can access a subset of room functions.
+ * @param roomName
+ * @constructor
+ */
+FoggedRoom = function(roomName){
+    this.name = roomName;
+    this.memory = Memory.rooms[roomName];
+};
+FoggedRoom.prototype.creepsByRole = {};
+FoggedRoom.prototype.assignedCreepsByRole = {};
+FoggedRoom.prototype.flagSettings = {};
+FoggedRoom.prototype.getAssignedCreeps = Room.prototype.getAssignedCreeps;
+FoggedRoom.prototype.getAssignedCreepsByRole = Room.prototype.getAssignedCreepsByRole;
+FoggedRoom.prototype.getParentRoom = Room.prototype.getParentRoom;
+FoggedRoom.prototype.getSetting = Room.prototype.getSetting;
+FoggedRoom.prototype.setSetting = Room.prototype.setSetting;

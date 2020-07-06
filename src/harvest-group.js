@@ -4,100 +4,62 @@ module.exports = function(nodeId){
     var id = nodeId;
     var node = Game.getObjectById(nodeId);
     var room = node.room;
-    var roomName = node.room.name;
     let log = room.getLogger();
-    var roomId = room.name;
 
     //Stored in memory
-    let targetEnergyStore;
-    let targetHarvesterCount;
-    let targetMinerCount;
-    let harvesterList;
-    let minerList;
+    let harvestGroup;
 
-    let workers = [
-        {
-            type: "harvester",
+    const WORKERS_DEFAULT = {
+        "harvester": {
             target: 0,
             list: []
         },
-        {
-            type: "miner",
+        "miner": {
             target: 0,
             list: []
         },
-        {
-            type: "drill",
+        "driller": {
             target: 0,
             list: []
         }
-    ]
+    }
 
     function perform(){
         getFromMemory();
+        removeDeadWorkers();
+        assignEnergyStore();
+        assignWorkers();
+    }
 
-        // Remove all dead harvesters
-        for(let i in harvesterList){
-            if(!Game.getObjectById(harvesterList[i])){
-                harvesterList.splice(i, 1);
-            }
-        }
-        for(let i in minerList){
-            if(!Game.getObjectById(harvesterList[i])){
-                minerList.splice(i, 1);
-            }
-        }
-
-        if(settings.get("disabled", roomId)){
-            return;
-        }
-
+    function assignEnergyStore(){
         // Check if the energy store is not defined or invalid
-        if(!targetEnergyStore || !Game.getObjectById(targetEnergyStore)){
+        if(!harvestGroup.targetEnergyStore || !Game.getObjectById(harvestGroup.targetEnergyStore)){
             // Find an appropriate energy store
-            Memory.rooms[roomId].harvestGroups[nodeId].targetEnergyStore = findNearestEnergyStore();
+            harvestGroup.targetEnergyStore = findNearestEnergyStore();
         }
+    }
 
-        // If we don't have enough harvesters on this node, find
+    function assignWorkers(){
+        // If we don't have enough workers on this node, find
         // an idle one and assign it.
-        if(harvesterList.length < targetHarvesterCount){
-            let harvester = findUnassignedWorker("harvester");
-            if(harvester){
-                addWorker(harvester);
-            } else {
-                let parentRoomName = settings.get("ParentRoom", roomId);
-                if(parentRoomName){
-                    let parentRoom = Game.rooms[parentRoomName];
-                    if(parentRoom){
-                        let queue = parentRoom.getSpawnQueue();
-                        let queueRequest = {role: "harvester", memory: {room: roomId}};
+        for(let workerType in harvestGroup.workers){
+            // console.log("Assigning "+workerType);
+            if(harvestGroup.workers[workerType].list.length < harvestGroup.workers[workerType].target){
+                let worker = findUnassignedWorker(workerType);
+                if(worker){
+                    addWorker(worker);
+                } else {
+                    let parentRoomName = settings.get("ParentRoom", room.id);
+                    if(parentRoomName){
+                        let parentRoom = Game.rooms[parentRoomName];
+                        if(parentRoom){
+                            let queue = parentRoom.getSpawnQueue();
+                            let queueRequest = {role: workerType, memory: {room: room.id}};
 
-                        if (queue.containsCount(queueRequest) < 1 && !parentRoom.hasInvaders()) {
-                            log("Requesting a harvester");
-                            queue.push(queueRequest);
-                        }
-                    }
-                }
-            }
-        }
-
-        // If we don't have enough miners on this node, find
-        // an idle one and assign it.
-        if(minerList.length < targetMinerCount){
-            let miner = findUnassignedWorker("miner");
-            if(miner){
-                addWorker(miner);
-            } else {
-                let parentRoomName = settings.get("ParentRoom", roomId);
-                if(parentRoomName){
-                    let parentRoom = Game.rooms[parentRoomName];
-                    if(parentRoom){
-                        let queue = parentRoom.getSpawnQueue();
-                        let queueRequest = {role: "miner", memory: {room: roomId}};
-
-                        if (queue.containsCount(queueRequest) < 1 && !parentRoom.hasInvaders()) {
-                            log("Requesting a miner");
-                            queue.push(queueRequest);
+                            if (queue.containsCount(queueRequest) < 1 && !parentRoom.hasInvaders()) {
+                                log("Requesting a "+workerType);
+                                queue.push(queueRequest);
+                            }
                         }
                     }
                 }
@@ -134,6 +96,17 @@ module.exports = function(nodeId){
         }
     }
 
+    function removeDeadWorkers(){
+        for(let type in harvestGroup.workers){
+            let workersList = harvestGroup.workers[type].list;
+            for(let j in workersList){
+                if(!Game.getObjectById(workersList[j])){
+                    workersList.splice(j, 1);
+                }
+            }
+        }
+    }
+
     function findNearestEnergyStore(){
         var structures = room.find(FIND_STRUCTURES);
         var options = [];
@@ -165,58 +138,51 @@ module.exports = function(nodeId){
     }
     
     function addWorker(creep){
-        Memory.creeps[creep.name].targetNode = id;
-        if(creep.memory.role === "miner"){
-            let index = minerList.length;
-            minerList[index] = creep.id;
-        } else if (creep.memory.role === "harvester"){
-            let index = harvesterList.length;
-            harvesterList[index] = creep.id;
-        }
+        creep.memory.targetNode = id;
+        harvestGroup.workers[creep.memory.role].list.push(creep.id);
     }
     
     function getFromMemory(){
-        Memory.rooms[roomId].harvestGroups = Memory.rooms[roomId].harvestGroups || {};
-        if(!Memory.rooms[roomId].harvestGroups[nodeId]){
-            initialize();
-        }
-        Memory.rooms[roomId].harvestGroups[nodeId] = Memory.rooms[roomId].harvestGroups[nodeId] || {};
-        Memory.rooms[roomId].harvestGroups[nodeId].harvesterList = Memory.rooms[roomId].harvestGroups[nodeId].harvesterList || [];
-        Memory.rooms[roomId].harvestGroups[nodeId].minerList = Memory.rooms[roomId].harvestGroups[nodeId].minerList || [];
+        room.memory.harvestGroups = room.memory.harvestGroups || {};
+        if(!room.memory.harvestGroups[nodeId]){
+            harvestGroup = initialize();
 
-        harvesterList = Memory.rooms[roomId].harvestGroups[nodeId].harvesterList;
-        minerList = Memory.rooms[roomId].harvestGroups[nodeId].minerList;
-        targetEnergyStore = Memory.rooms[roomId].harvestGroups[nodeId].targetEnergyStore;
-        targetHarvesterCount = Memory.rooms[roomId].harvestGroups[nodeId].targetHarvesterCount;
-        targetMinerCount = Memory.rooms[roomId].harvestGroups[nodeId].targetMinerCount;
+        } else {
+            harvestGroup = room.memory.harvestGroups[nodeId];
+        }
+        // Convert from old to new
+        if(!harvestGroup.workers){
+            harvestGroup.workers = WORKERS_DEFAULT;
+            harvestGroup.workers["harvester"].target = harvestGroup.targetHarvesterCount;
+            harvestGroup.workers["harvester"].list = harvestGroup.harvesterList;
+        }
     }
     
 
     function initialize(){
-        let harvestGroups = Memory.rooms[roomName].harvestGroups || (Memory.rooms[roomName].harvestGroups = {});
         console.log("Initializing"+nodeId);
+        let harvestGroup;
         if(node instanceof Source){
             harvestGroup = {
                 targetHarvesterCount : node.pos.getOpenAdjacentPositionsCount(),
                 targetMinerCount : 0
             };
         } else if(node instanceof Mineral){
-            var storages = room.find(FIND_MY_STRUCTURES, {filter: utils.isA("storage")});
+            let storages = room.find(FIND_MY_STRUCTURES, {filter: utils.isA("storage")});
+            let targetEnergyStore = "";
             if(storages[0]){
                 targetEnergyStore = storages[0].id;
             }
              harvestGroup = {
-                targetHarvesterCount : 0,
-                targetMinerCount : 0,
+                workers : workers,
                 targetEnergyStore : targetEnergyStore
             };
         }
-        harvestGroups[id] = harvestGroup;
+        room.memory.harvestGroups[id] = harvestGroup;
         return harvestGroup;
     }
     
     var publicAPI = {};
     publicAPI.perform = perform;
-    publicAPI.initialize = initialize;
     return publicAPI;
 };

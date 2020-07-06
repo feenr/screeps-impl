@@ -31,7 +31,7 @@ module.exports = (function(){
             try{
                 this.states[this.getState()].action.call(this , this);
             } catch (e) {
-                this.log(e.stack);
+                console.log(e.stack);
                 this.setState(0);
             }
             if(this.getState() != previousState){

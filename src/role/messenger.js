@@ -35,7 +35,7 @@ module.exports = function(creep){
         }
 
         if(!energySource
-            || energySource instanceof Structure && energySource.getEnergy() == 0){
+            || energySource instanceof Structure && energySource.getEnergy() <=1){
             creep.memory.energySourceId = null;
             return false;
         }
@@ -47,7 +47,7 @@ module.exports = function(creep){
             creep.moveToAndWithdraw(energySource, RESOURCE_ENERGY);
         }
 
-        if(creep.carryAmount() == creep.carryCapacity){
+        if(creep.carryAmount() === creep.carryCapacity){
             creep.memory.energySourceId = "";
             creep.memory.state = 2;
             return;
@@ -81,7 +81,7 @@ module.exports = function(creep){
             creep.memory.energyStoreId = "";
         }
 
-        if(creep.carryAmount() == 0){
+        if(creep.carryAmount() === 0){
             creep.memory.state = 1;
             return;
         }
@@ -98,7 +98,7 @@ module.exports = function(creep){
         var bestEnergySource = null;
 
         var droppedResources = null;
-        //droppedResources = creep.room.find(FIND_DROPPED_ENERGY)[0]
+        droppedResources = creep.room.find(FIND_DROPPED_RESOURCES)[0]
         if(droppedResources){
             if(!creep.pos.isNearTo(droppedResources)){
                 creep.moveTo(droppedResources);

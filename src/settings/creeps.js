@@ -8,6 +8,7 @@ const explore = require('role_explorer');
 const spawner = require('role_spawn_builder');
 const healer = require('role_healer');
 const mine = require('role_miner');
+const drill = require('role_driller');
 const rangedAttack = require('role_ranged_soldier');
 const deconstructor = require('role_deconstructor');
 
@@ -84,6 +85,11 @@ module.exports = {
         role : 'miner',
         skills: [MOVE, WORK, WORK, WORK],
         action: mine,
+    },
+    driller: {
+        role : 'driller',
+        skills: [WORK, WORK, WORK],
+        action: drill,
     },
     rangedSoldier: {
         role : 'rangedSoldier',
