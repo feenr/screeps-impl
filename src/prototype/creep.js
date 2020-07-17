@@ -138,7 +138,7 @@ module.exports = (function(){
 
         Creep.prototype.moveToAndRepair = function(constructionSite){
             if(!this.pos.inRangeTo(constructionSite, 3)){
-                this.moveTo(constructionSite);
+                this.moveTo(constructionSite, {"visualizePathStyle":{}});
             } else {
                 this.repair(constructionSite);
             }
@@ -146,7 +146,7 @@ module.exports = (function(){
 
         Creep.prototype.moveToAndDeconstruct = function(constructionSite){
             if(!this.pos.isNearTo(constructionSite)){
-                this.moveTo(constructionSite);
+                this.moveTo(constructionSite, {"visualizePathStyle":{}});
             } else {
                 this.dismantle(constructionSite);
             }
@@ -154,7 +154,7 @@ module.exports = (function(){
 
         Creep.prototype.moveToAndPickUp = function(resource){
             if(!this.pos.isNearTo(resource)){
-                this.moveTo(resource);
+                this.moveTo(resource, {"visualizePathStyle":{}});
             } else {
                 this.pickup(resource);
             }
@@ -178,7 +178,7 @@ module.exports = (function(){
 
         Creep.prototype.moveToAndTransferEnergy = function(transferTarget){
             if(!this.pos.isNearTo(transferTarget)){
-                this.moveTo(transferTarget);
+                this.moveTo(transferTarget, {"visualizePathStyle":{}});
             } else {
                 this.transfer(transferTarget, RESOURCE_ENERGY);
             }
@@ -194,17 +194,13 @@ module.exports = (function(){
 
         Creep.prototype.moveToAndRequestEnergy = function(transferTarget, sameRoom){
             if(!this.pos.isNearTo(transferTarget)){
-                if(sameRoom && this.room.name == this.memory.room){
+                if(sameRoom && this.room.name === this.memory.room){
                     this.moveByPath(this.pos.findPathTo(transferTarget, {maxRooms: 1}));
                 } else {
-                    this.moveTo(transferTarget);
+                    this.moveTo(transferTarget, {"visualizePathStyle":{}});
                 }
             } else {
-                if(transferTarget.transferEnergy){
-                    transferTarget.transferEnergy(this);
-                } else {
-                    transferTarget.transfer(this, RESOURCE_ENERGY);
-                }
+                this.withdraw(transferTarget, RESOURCE_ENERGY);
             }
         };
 
@@ -292,7 +288,7 @@ module.exports = (function(){
         Creep.prototype.idle = function(){
             var waitFlag = null;
             for(var i in Game.flags){
-                if(Game.flags[i].room == this.room && (i.indexOf('Cantina')==0)){
+                if(Game.flags[i].room === this.room && (i.indexOf('Cantina')==0)){
                     waitFlag = Game.flags[i];
                 }
             }

@@ -410,12 +410,12 @@ module.exports = (function() {
         }
     };
 
-    function createStructure(flagName, structureType, count){
+    function createStructure(flagType, structureType, count){
         if(typeof count != 'number'){
             count = 1;
         }
         for(let flagName in Game.flags){
-            if(Game.flags[flagName].name.indexOf(flagName)===0 && Game.flags[flagName].room === this){
+            if(Game.flags[flagName].name.indexOf(flagType)===0 && Game.flags[flagName].room === this){
                 if(this.createConstructionSite(Game.flags[flagName].pos, structureType) === 0){
                     let log = flag.room.getLogger();
                     log("Created a "+structureType+" construction site.");
@@ -442,7 +442,7 @@ module.exports = (function() {
         log("Creating "+count+" extensions");
         let extensionPosition = null;
         for(let i in Game.flags){
-            if(Game.flags[i].room == this && Game.flags[i].name.indexOf("Extension-")==0){
+            if(Game.flags[i].room === this && Game.flags[i].name.indexOf("Extension-")===0){
                 extensionPosition = Game.flags[i].pos;
             }
         }
