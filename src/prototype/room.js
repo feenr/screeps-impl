@@ -578,3 +578,4 @@ FoggedRoom.prototype.getAssignedCreepsByRole = Room.prototype.getAssignedCreepsB
 FoggedRoom.prototype.getParentRoom = Room.prototype.getParentRoom;
 FoggedRoom.prototype.getSetting = Room.prototype.getSetting;
 FoggedRoom.prototype.setSetting = Room.prototype.setSetting;
+
