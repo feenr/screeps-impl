@@ -21,7 +21,7 @@ module.exports = function(creep){
     creep.performStates();
 
     function collectResources(){
-        if(creep.carry.energy == creep.carryCapacity){
+        if(creep.carry.energy === creep.carryCapacity){
             creep.memory.state = 2;
             creep.memory.energySourceId = "";
             return false;

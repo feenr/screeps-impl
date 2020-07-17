@@ -34,7 +34,7 @@ module.exports = (function(){
                 console.log(e.stack);
                 this.setState(0);
             }
-            if(this.getState() != previousState){
+            if(this.getState() !== previousState){
                 this.say(this.getRole().substring(0,4) +":"+this.getPreviousState() + " > " + this.getState());
                 this.setPreviousState(this.getState());
             }
@@ -42,7 +42,7 @@ module.exports = (function(){
 
         Creep.prototype.stuck = function(){
             this.moveToHomeRoom();
-            if(this.room.name == this.memory.room){
+            if(this.room.name === this.memory.room){
                 this.setState(1);
             }
         };
@@ -66,20 +66,20 @@ module.exports = (function(){
         };
 
         Creep.prototype.carryFull = function(){
-            return _.sum(this.carry) == this.carryCapacity;
+            return _.sum(this.carry) === this.carryCapacity;
         };
 
         Creep.prototype.carryEmpty = function(){
-            return _.sum(this.carry) == 0;
+            return _.sum(this.carry) === 0;
         };
 
         /** Actions **/
 
         Creep.prototype.moveToAndRequestRenew = function(){
 
-            var spawn = null;
-            for(var i in Game.spawns){
-                if(Game.spawns[i].room == this.room){
+            let spawn = null;
+            for(let i in Game.spawns){
+                if(Game.spawns[i].room === this.room){
                     spawn = Game.spawns[i];
                     break;
                 }
@@ -87,7 +87,7 @@ module.exports = (function(){
             }
             if(spawn){
                 if(!this.pos.isNearTo(spawn)){
-                    this.moveTo(spawn);
+                    this.moveTo(spawn, {"visualizePathStyle":{}});
                     return true;
                 } else {
                     spawn.renewCreep(this);
@@ -101,7 +101,7 @@ module.exports = (function(){
 
         Creep.prototype.moveToAndBuild = function(constructionSite){
             if(!this.pos.inRangeTo(constructionSite, 3)){
-                this.moveTo(constructionSite);
+                this.moveTo(constructionSite, {"visualizePathStyle":{}});
             } else {
                 this.build(constructionSite);
                 if(constructionSite.progress >= constructionSite.progressTotal){
@@ -120,7 +120,7 @@ module.exports = (function(){
         };
 
         Creep.prototype.dropCarryAndSuicide = function(){
-            if(this.carry.energy == 0){
+            if(this.carry.energy === 0){
                 this.log("Euthanizing myself");
                 this.suicide();
             }
@@ -138,7 +138,7 @@ module.exports = (function(){
 
         Creep.prototype.moveToAndRepair = function(constructionSite){
             if(!this.pos.inRangeTo(constructionSite, 3)){
-                this.moveTo(constructionSite);
+                this.moveTo(constructionSite, {"visualizePathStyle":{}});
             } else {
                 this.repair(constructionSite);
             }
@@ -146,7 +146,7 @@ module.exports = (function(){
 
         Creep.prototype.moveToAndDeconstruct = function(constructionSite){
             if(!this.pos.isNearTo(constructionSite)){
-                this.moveTo(constructionSite);
+                this.moveTo(constructionSite, {"visualizePathStyle":{}});
             } else {
                 this.dismantle(constructionSite);
             }
@@ -154,7 +154,7 @@ module.exports = (function(){
 
         Creep.prototype.moveToAndPickUp = function(resource){
             if(!this.pos.isNearTo(resource)){
-                this.moveTo(resource);
+                this.moveTo(resource, {"visualizePathStyle":{}});
             } else {
                 this.pickup(resource);
             }
@@ -194,17 +194,13 @@ module.exports = (function(){
 
         Creep.prototype.moveToAndRequestEnergy = function(transferTarget, sameRoom){
             if(!this.pos.isNearTo(transferTarget)){
-                if(sameRoom && this.room.name == this.memory.room){
+                if(sameRoom && this.room.name === this.memory.room){
                     this.moveByPath(this.pos.findPathTo(transferTarget, {maxRooms: 1}));
                 } else {
-                    this.moveTo(transferTarget);
+                    this.moveTo(transferTarget, {"visualizePathStyle":{}});
                 }
             } else {
-                if(transferTarget.transferEnergy){
-                    transferTarget.transferEnergy(this);
-                } else {
-                    transferTarget.transfer(this, RESOURCE_ENERGY);
-                }
+                this.withdraw(transferTarget, RESOURCE_ENERGY);
             }
         };
 
@@ -235,7 +231,7 @@ module.exports = (function(){
 
         Creep.prototype.moveToAndUpgrade = function(controller, sameRoom){
             if(!this.pos.inRangeTo(controller, 2)){
-                if(sameRoom && this.room.name == this.memory.room){
+                if(sameRoom && this.room.name === this.memory.room){
                     this.moveByPath(this.pos.findPathTo(controller, {maxRooms: 1}));
                 } else {
                     this.moveTo(controller, {"visualizePathStyle":{}});
@@ -247,7 +243,7 @@ module.exports = (function(){
 
         Creep.prototype.moveToAndWait = function(target, sameRoom){
             if(!this.pos.isNearTo(target)){
-                if(sameRoom && this.room.name == this.memory.room){
+                if(sameRoom && this.room.name === this.memory.room){
                     this.moveByPath(this.pos.findPathTo(target, {maxRooms: 1}));
                 } else {
                     this.moveTo(target, {"visualizePathStyle":{}});
@@ -291,8 +287,8 @@ module.exports = (function(){
 
         Creep.prototype.idle = function(){
             var waitFlag = null;
-            for(var i in Game.flags){
-                if(Game.flags[i].room == this.room && (i.indexOf('Cantina')==0)){
+            for(let i in Game.flags){
+                if(Game.flags[i].room === this.room && (i.indexOf('Cantina')===0)){
                     waitFlag = Game.flags[i];
                 }
             }
